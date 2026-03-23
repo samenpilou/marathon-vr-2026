@@ -513,28 +513,97 @@ const phases = [
 ];
 
 /* ═══════════════════════════════════════
-   STORAGE  (localStorage — standalone file)
+   STORAGE — Supabase (multi-appareils)
 ═══════════════════════════════════════ */
-const STORE_KEY = 'marathon_vr_2026_v1';
+const SUPABASE_URL = 'https://hunfvnoanwpmbydnvgrm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bmZ2bm9hbndwbWJ5ZG52Z3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODkxMTcsImV4cCI6MjA4OTg2NTExN30.srJHXze2XD9GMKKO3vKyuEs4TtvV_-Gt2Xz9aGrchBI';
+
+/* Cache local pour éviter des requêtes répétées */
+let _cache = null;
+let _cacheTs = 0;
+const CACHE_TTL = 5000; // 5 secondes
+
+async function fetchAllLogs() {
+  const now = Date.now();
+  if(_cache && now - _cacheTs < CACHE_TTL) return _cache;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/marathon_logs?select=log_key,data`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if(!res.ok) throw new Error('fetch failed');
+    const rows = await res.json();
+    const obj = {};
+    rows.forEach(r => { obj[r.log_key] = r.data; });
+    _cache = obj;
+    _cacheTs = now;
+    return obj;
+  } catch(e) {
+    console.warn('Supabase unavailable, falling back to localStorage', e);
+    try { return JSON.parse(localStorage.getItem('marathon_vr_fallback') || '{}'); }
+    catch(e2) { return {}; }
+  }
+}
 
 function loadLogs() {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
-  catch(e) { return {}; }
+  /* Version synchrone — utilise le cache en mémoire */
+  return _cache || {};
 }
-function saveLogs(logs) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(logs));
+
+async function loadLogsAsync() {
+  return await fetchAllLogs();
 }
+
 function getLogKey(pi, wi, si) { return `${pi}_${wi}_${si}`; }
-function getLog(pi, wi, si) { return loadLogs()[getLogKey(pi,wi,si)] || null; }
-function setLog(pi, wi, si, data) {
-  const logs = loadLogs();
-  logs[getLogKey(pi,wi,si)] = data;
-  saveLogs(logs);
+
+function getLog(pi, wi, si) {
+  return loadLogs()[getLogKey(pi,wi,si)] || null;
 }
-function clearLog(pi, wi, si) {
-  const logs = loadLogs();
-  delete logs[getLogKey(pi,wi,si)];
-  saveLogs(logs);
+
+async function setLog(pi, wi, si, data) {
+  const key = getLogKey(pi,wi,si);
+  /* Mise à jour optimiste du cache immédiatement */
+  if(!_cache) _cache = {};
+  _cache[key] = data;
+  _cacheTs = Date.now();
+  /* Persistance locale de secours */
+  try {
+    const fb = JSON.parse(localStorage.getItem('marathon_vr_fallback') || '{}');
+    fb[key] = data;
+    localStorage.setItem('marathon_vr_fallback', JSON.stringify(fb));
+  } catch(e) {}
+  /* Envoi vers Supabase */
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/marathon_logs`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ log_key: key, data, updated_at: new Date().toISOString() })
+    });
+  } catch(e) {
+    console.warn('Supabase write failed, data saved locally', e);
+  }
+}
+
+async function clearLog(pi, wi, si) {
+  const key = getLogKey(pi,wi,si);
+  if(_cache) delete _cache[key];
+  try {
+    const fb = JSON.parse(localStorage.getItem('marathon_vr_fallback') || '{}');
+    delete fb[key];
+    localStorage.setItem('marathon_vr_fallback', JSON.stringify(fb));
+  } catch(e) {}
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/marathon_logs?log_key=eq.${key}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+  } catch(e) {
+    console.warn('Supabase delete failed', e);
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -954,7 +1023,7 @@ function closeForm(formKey) {
   if(f) f.classList.remove('open');
 }
 
-function saveLog(pi, wi, si, status) {
+async function saveLog(pi, wi, si, status) {
   const formKey = getLogKey(pi,wi,si);
   if(status === 'done') {
     const kmEl = document.getElementById('km_'+formKey);
@@ -972,21 +1041,23 @@ function saveLog(pi, wi, si, status) {
       comment: commentEl && commentEl.value ? commentEl.value.trim() : null,
       ts: Date.now(),
     };
-    setLog(pi,wi,si,data);
+    await setLog(pi,wi,si,data);
     openForms[formKey] = false;
   } else {
     const formKey2 = getLogKey(pi,wi,si);
     const commentEl = document.getElementById('comment_'+formKey2);
-    setLog(pi,wi,si,{status:'skipped',comment:commentEl&&commentEl.value?commentEl.value.trim():null,ts:Date.now()});
+    await setLog(pi,wi,si,{status:'skipped',comment:commentEl&&commentEl.value?commentEl.value.trim():null,ts:Date.now()});
     openForms[formKey2] = false;
   }
   delete ressentiValues[formKey];
+  showSyncStatus('saving');
+  setTimeout(() => showSyncStatus('ok'), 800);
   refresh();
   checkAdaptation(pi,wi,si);
 }
 
-function clearLogEntry(pi, wi, si) {
-  clearLog(pi,wi,si);
+async function clearLogEntry(pi, wi, si) {
+  await clearLog(pi,wi,si);
   delete ressentiValues[getLogKey(pi,wi,si)];
   refresh();
 }
@@ -1190,11 +1261,47 @@ function updateCountdown() {
   document.getElementById('daysLeft').textContent = d>0?d:'0';
 }
 
-buildSidebar();
-renderZones();
-renderOverview();
-updateCountdown();
-updateFormBar();
+/* Chargement initial depuis Supabase */
+(async () => {
+  showSyncStatus('loading');
+  await loadLogsAsync();
+  showSyncStatus('ok');
+  buildSidebar();
+  renderZones();
+  renderOverview();
+  updateCountdown();
+  updateFormBar();
+})();
+
+function showSyncStatus(state) {
+  let bar = document.getElementById('syncBar');
+  if(!bar) {
+    bar = document.createElement('div');
+    bar.id = 'syncBar';
+    bar.style.cssText = 'position:fixed;bottom:1rem;right:1rem;padding:6px 14px;border-radius:6px;font-size:11px;font-family:var(--font-mono);z-index:200;transition:opacity .5s;';
+    document.body.appendChild(bar);
+  }
+  if(state === 'loading') {
+    bar.style.background = 'var(--surface2)';
+    bar.style.border = '1px solid var(--border2)';
+    bar.style.color = 'var(--text3)';
+    bar.style.opacity = '1';
+    bar.textContent = '⟳ Synchronisation...';
+  } else if(state === 'ok') {
+    bar.style.background = 'rgba(29,158,117,0.15)';
+    bar.style.border = '1px solid rgba(29,158,117,0.3)';
+    bar.style.color = 'var(--teal)';
+    bar.style.opacity = '1';
+    bar.textContent = '✓ Synchronisé';
+    setTimeout(() => { bar.style.opacity = '0'; }, 2000);
+  } else if(state === 'saving') {
+    bar.style.background = 'var(--surface2)';
+    bar.style.border = '1px solid var(--border2)';
+    bar.style.color = 'var(--text2)';
+    bar.style.opacity = '1';
+    bar.textContent = '↑ Sauvegarde...';
+  }
+}
 </script>
 </body>
 </html>
