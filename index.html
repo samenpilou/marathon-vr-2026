@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dashboard Marathon</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0e0c; --surface:#161614; --surface2:#1e1e1b; --surface3:#252522;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12); --border3:rgba(255,255,255,0.2);
+  --text:#e8e6df; --text2:#908e85; --text3:#504e48;
+  --teal:#1D9E75; --teal-light:#4ABFA0; --teal-dim:rgba(29,158,117,0.12);
+  --blue:#378ADD; --blue-light:#6AAEE8; --blue-dim:rgba(55,138,221,0.12);
+  --purple:#7F77DD; --purple-dim:rgba(127,119,221,0.12);
+  --amber:#EF9F27; --amber-light:#F5BC65; --amber-dim:rgba(239,159,39,0.12);
+  --red:#E24B4A; --red-dim:rgba(226,75,74,0.12);
+  --font-display:'Fraunces',Georgia,serif; --font-mono:'DM Mono','Courier New',monospace;
+  --bottom-bar-h: 60px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;line-height:1.6;min-height:100vh;}
+
+/* ── HEADER ── */
+.header{padding:1.2rem 2rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:12px;color:var(--text2);touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.hamburger svg{display:block;}
+.header-title h1{font-family:var(--font-display);font-weight:300;font-size:1.5rem;line-height:1.1;letter-spacing:-0.02em;}
+.header-title h1 em{font-style:italic;color:var(--teal-light);}
+.header-title p{color:var(--text2);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+.header-right{display:flex;gap:1rem;align-items:center;}
+.hstat{text-align:right;}
+.hstat-val{font-family:var(--font-display);font-weight:300;font-size:1.3rem;line-height:1;}
+.hstat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.countdown{background:var(--teal-dim);border:1px solid rgba(29,158,117,0.3);border-radius:6px;padding:6px 12px;text-align:center;}
+.countdown-val{font-family:var(--font-display);font-size:1.5rem;font-weight:300;color:var(--teal-light);line-height:1;}
+.countdown-label{font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;}
+.btn-settings{background:none;border:1px solid var(--border2);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text3);transition:all .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.btn-settings:hover{color:var(--text);border-color:var(--border3);}
+
+/* ── FORME BAR ── */
+.forme-bar{padding:.5rem 2rem;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;}
+.forme-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;}
+.forme-dots{display:flex;gap:5px;}
+.forme-dot{width:24px;height:5px;border-radius:3px;background:var(--surface3);}
+.forme-dot.active-teal{background:var(--teal);}
+.forme-dot.active-amber{background:var(--amber);}
+.forme-dot.active-red{background:var(--red);}
+.forme-text{font-size:11px;color:var(--text2);}
+.forme-sep{width:1px;height:14px;background:var(--border);}
+.progression-text{font-size:11px;color:var(--text2);}
+.progression-text strong{color:var(--teal-light);}
+.program-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(29,158,117,0.2);}
+.program-badge.archived{background:var(--surface2);color:var(--text3);border-color:var(--border);}
+
+/* ── DESKTOP TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 2rem;}
+.tab{padding:10px 16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-family:var(--font-mono);background:none;border-top:none;border-left:none;border-right:none;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--text);border-bottom-color:var(--teal);}
+
+/* ── LAYOUT ── */
+.main{display:flex;min-height:calc(100vh - 140px);}
+.sidebar{width:210px;flex-shrink:0;border-right:1px solid var(--border);padding:1.2rem 0;}
+.content{flex:1;padding:1.5rem 2rem;overflow-x:hidden;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── SIDEBAR ── */
+.sidebar-heading{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:0 1.2rem;margin-bottom:.4rem;}
+.sidebar-section{margin-bottom:1.2rem;}
+.phase-item{display:flex;align-items:center;gap:10px;padding:7px 1.2rem;cursor:pointer;transition:background .15s;border-left:2px solid transparent;}
+.phase-item:hover{background:var(--surface2);}
+.phase-item.active{background:var(--surface2);border-left-color:var(--phase-color);}
+.phase-dot{width:7px;height:7px;border-radius:50%;background:var(--phase-color);flex-shrink:0;}
+.phase-name{font-size:11px;color:var(--text2);}
+.phase-item.active .phase-name{color:var(--text);}
+.phase-weeks{font-size:10px;color:var(--text3);}
+.week-list{max-height:400px;overflow-y:auto;scrollbar-width:none;}
+.week-list::-webkit-scrollbar{display:none;}
+.week-item{display:flex;align-items:center;gap:8px;padding:5px 1.2rem;cursor:pointer;transition:background .15s;border-left:2px solid transparent;}
+.week-item:hover{background:var(--surface2);}
+.week-item.active{background:var(--surface2);border-left-color:var(--phase-color,var(--teal));}
+.week-num-label{font-size:10px;color:var(--text3);min-width:20px;}
+.week-item-title{font-size:11px;color:var(--text2);flex:1;}
+.week-item.active .week-item-title{color:var(--text);}
+.week-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.week-highlight-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+
+/* ── MOBILE DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:80;opacity:0;transition:opacity .25s;}
+.drawer-overlay.open{opacity:1;}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:var(--surface);border-right:1px solid var(--border2);z-index:90;transform:translateX(-100%);transition:transform .25s ease;padding:1rem 0;overflow-y:auto;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.2rem 1rem;border-bottom:1px solid var(--border);}
+.drawer-title{font-family:var(--font-display);font-size:1rem;font-weight:300;color:var(--text);}
+.btn-close-drawer{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;}
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bottom-bar-h);background:var(--surface);border-top:1px solid var(--border2);z-index:70;padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+.bottom-nav-inner{display:flex;height:100%;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);transition:color .15s;border:none;background:none;font-family:var(--font-mono);touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.bnav-item.active{color:var(--teal);}
+.bnav-item svg{width:20px;height:20px;}
+.bnav-label{font-size:9px;letter-spacing:.04em;text-transform:uppercase;}
+
+/* ── SECTION TITLE ── */
+.section-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;padding-bottom:6px;border-bottom:1px solid var(--border);}
+
+/* ── STAT CARDS ── */
+.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.stat-val{font-family:var(--font-display);font-size:1.4rem;font-weight:300;}
+.stat-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+
+/* ── ADAPT BANNER ── */
+.adapt-banner{background:var(--amber-dim);border:1px solid rgba(239,159,39,0.35);border-radius:8px;padding:10px 14px;margin-bottom:1.2rem;display:flex;gap:10px;align-items:flex-start;}
+.adapt-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.adapt-text{font-size:12px;color:var(--amber-light);line-height:1.6;}
+.adapt-text strong{color:var(--amber);}
+
+/* ── SESSION CARDS ── */
+.sessions-list{display:flex;flex-direction:column;gap:10px;}
+.session-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;position:relative;overflow:hidden;transition:border-color .2s;}
+.session-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--s-color);}
+.session-card:hover{border-color:var(--border2);}
+.session-card.done{opacity:.75;}
+.session-card.done::after{content:'✓';position:absolute;top:10px;right:14px;font-size:16px;color:var(--teal);}
+.session-card.skipped::after{content:'—';position:absolute;top:10px;right:14px;font-size:16px;color:var(--text3);}
+.session-card.readonly{pointer-events:none;opacity:.6;}
+.session-top{display:flex;gap:1rem;align-items:flex-start;}
+.session-day-badge{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);min-width:26px;padding-top:2px;}
+.session-body{flex:1;}
+.session-name{font-size:13px;color:var(--text);margin-bottom:5px;}
+.session-type-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+.session-details{display:flex;flex-wrap:wrap;gap:6px;}
+.sdet{background:var(--surface2);border-radius:4px;padding:3px 7px;font-size:11px;}
+.sdet-label{color:var(--text3);}
+.sdet-val{color:var(--text2);}
+.session-dist-badge{font-family:var(--font-display);font-size:1.2rem;font-weight:300;color:var(--text2);min-width:44px;text-align:right;padding-top:2px;}
+.session-dist-badge span{font-size:10px;color:var(--text3);}
+.session-note{margin-top:5px;font-size:11px;color:var(--text3);font-style:italic;}
+
+/* ── LOG FORM ── */
+.log-toggle{margin-top:10px;display:flex;gap:8px;align-items:center;}
+.btn-log{padding:4px 11px;font-size:11px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-mono);transition:all .15s;}
+.btn-log:hover{background:var(--surface2);color:var(--text);}
+.btn-log.done-btn{border-color:rgba(29,158,117,0.4);color:var(--teal);}
+.btn-log.skip-btn{border-color:var(--border);color:var(--text3);}
+.btn-log.edit-btn{border-color:rgba(239,159,39,0.3);color:var(--amber);}
+.log-form{margin-top:10px;background:var(--surface2);border-radius:8px;padding:12px;display:none;}
+.log-form.open{display:block;}
+.log-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.log-field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:90px;}
+.log-field label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.log-field input,.log-field textarea{background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;}
+.log-field input:focus,.log-field textarea:focus{border-color:var(--teal);}
+.log-field textarea{resize:vertical;min-height:46px;}
+.ressenti-row{display:flex;gap:5px;margin-bottom:8px;}
+.ressenti-btn{flex:1;padding:5px 2px;border:1px solid var(--border);background:transparent;border-radius:6px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-mono);transition:all .15s;text-align:center;}
+.ressenti-btn.selected-1{border-color:var(--red);color:var(--red);background:var(--red-dim);}
+.ressenti-btn.selected-2{border-color:var(--amber);color:var(--amber);background:var(--amber-dim);}
+.ressenti-btn.selected-3{border-color:var(--teal);color:var(--teal);background:var(--teal-dim);}
+.ressenti-btn.selected-4{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+.ressenti-btn.selected-5{border-color:var(--purple);color:var(--purple);background:var(--purple-dim);}
+.log-actions{display:flex;gap:7px;}
+.btn-save{padding:5px 14px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:12px;font-family:var(--font-mono);cursor:pointer;}
+.btn-save:hover{background:var(--teal-light);}
+.btn-cancel-sm{padding:5px 10px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-mono);cursor:pointer;}
+.log-result{margin-top:8px;background:var(--surface2);border-radius:6px;padding:7px 10px;border-left:2px solid var(--teal);}
+.log-result.skipped-result{border-left-color:var(--text3);}
+.log-result-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:3px;}
+.log-res-item{font-size:11px;}
+.log-res-label{color:var(--text3);}
+.log-res-val{color:var(--text2);}
+.log-res-comment{font-size:11px;color:var(--text3);font-style:italic;margin-top:2px;}
+.delta-badge{display:inline-block;font-size:10px;padding:1px 5px;border-radius:8px;margin-left:4px;}
+.delta-pos{background:var(--teal-dim);color:var(--teal);}
+.delta-neg{background:var(--red-dim);color:var(--red);}
+
+/* ── WEEK HEADER ── */
+.week-header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
+.week-title-display{font-family:var(--font-display);font-size:1.3rem;font-weight:300;}
+.week-vol-display{font-family:var(--font-display);font-size:1.6rem;font-weight:300;}
+.vol-bar-outer{height:3px;background:var(--surface3);border-radius:2px;margin-bottom:1.2rem;}
+.vol-bar-inner{height:3px;border-radius:2px;transition:width .4s;}
+
+/* ── ZONES ── */
+.zones-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:2rem;}
+.zone-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;position:relative;overflow:hidden;}
+.zone-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--zone-color);}
+.zone-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.3rem;}
+.zone-name{font-family:var(--font-display);font-size:1rem;font-weight:300;color:var(--text);margin-bottom:.25rem;}
+.zone-pace{font-size:1.2rem;font-family:var(--font-display);font-weight:300;color:var(--zone-color);line-height:1;}
+.zone-hr{font-size:11px;color:var(--text2);margin-top:3px;}
+.zone-desc{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;}
+.zone-badges{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;}
+.zbadge{font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,0.05);color:var(--text3);}
+
+/* ── TARGET BAR ── */
+.marathon-target{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;}
+.target-item .tlabel{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+.target-item .tval{font-family:var(--font-display);font-size:1.3rem;font-weight:300;color:var(--teal-light);}
+.target-item .tsub{font-size:11px;color:var(--text2);}
+.tdivider{width:1px;height:36px;background:var(--border);}
+
+/* ── PHASE DETAIL ── */
+.phase-desc-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;margin-bottom:1rem;color:var(--text2);font-size:12px;line-height:1.7;}
+.phase-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.phase-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;}
+.phase-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.phase-stat-val{font-family:var(--font-display);font-size:1.2rem;font-weight:300;}
+.focus-item{display:flex;gap:7px;padding:2px 0;font-size:11px;color:var(--text2);}
+
+/* ── TIMELINE ── */
+.timeline-wrap{overflow-x:auto;padding-bottom:1rem;}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:0;max-width:560px;width:100%;max-height:90vh;display:flex;flex-direction:column;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);}
+.modal-title{font-family:var(--font-display);font-weight:300;font-size:1.2rem;}
+.btn-close-modal{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1.5rem;}
+.modal-tab{padding:9px 14px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-mono);transition:all .2s;}
+.modal-tab.active{color:var(--text);border-bottom-color:var(--teal);}
+.modal-body{padding:1.2rem 1.5rem;overflow-y:auto;flex:1;}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+/* ── SETTINGS PANELS ── */
+.settings-panel{display:none;}
+.settings-panel.active{display:block;}
+.import-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;color:var(--text);font-family:var(--font-mono);font-size:11px;min-height:140px;resize:vertical;outline:none;margin-bottom:10px;}
+.import-textarea:focus{border-color:var(--teal);}
+.import-error{background:var(--red-dim);border:1px solid rgba(226,75,74,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);margin-bottom:10px;display:none;}
+.import-success{background:var(--teal-dim);border:1px solid rgba(29,158,117,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--teal);margin-bottom:10px;display:none;}
+.btn-primary{padding:6px 16px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:12px;font-family:var(--font-mono);cursor:pointer;}
+.btn-primary:hover{background:var(--teal-light);}
+.btn-secondary{padding:6px 14px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:6px;font-size:12px;font-family:var(--font-mono);cursor:pointer;}
+.btn-secondary:hover{background:var(--surface2);}
+.btn-danger{padding:6px 14px;background:transparent;color:var(--red);border:1px solid rgba(226,75,74,0.3);border-radius:6px;font-size:12px;font-family:var(--font-mono);cursor:pointer;}
+.btn-danger:hover{background:var(--red-dim);}
+
+/* Programs list */
+.program-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem;}
+.program-row{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;display:flex;align-items:center;gap:10px;}
+.program-row.is-active{border-color:rgba(29,158,117,0.35);}
+.program-row-info{flex:1;}
+.program-row-name{font-size:13px;color:var(--text);}
+.program-row-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.program-row-badge{font-size:10px;padding:2px 8px;border-radius:8px;}
+.badge-active{background:var(--teal-dim);color:var(--teal);}
+.badge-archived{background:var(--surface3);color:var(--text3);}
+.program-row-actions{display:flex;gap:6px;}
+
+/* New program form */
+.new-program-form{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem;}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.form-field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px;}
+.form-field label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.form-field input,.form-field textarea{background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:5px 8px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;}
+.form-field input:focus,.form-field textarea:focus{border-color:var(--teal);}
+.form-field textarea{resize:vertical;min-height:100px;}
+
+/* Confirmation modal */
+.confirm-modal{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:1.5rem;max-width:380px;width:100%;}
+.confirm-modal h3{font-family:var(--font-display);font-weight:300;font-size:1.1rem;margin-bottom:.8rem;}
+.confirm-modal p{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:1rem;}
+
+/* Readonly banner */
+.readonly-banner{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:1rem;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.session-card{animation:fadeUp .2s ease both;}
+.session-card:nth-child(1){animation-delay:.02s;}
+.session-card:nth-child(2){animation-delay:.05s;}
+.session-card:nth-child(3){animation-delay:.08s;}
+.session-card:nth-child(4){animation-delay:.11s;}
+
+/* ── SYNC STATUS ── */
+#syncBar{position:fixed;bottom:calc(var(--bottom-bar-h) + .8rem);right:1rem;padding:5px 12px;border-radius:6px;font-size:11px;font-family:var(--font-mono);z-index:200;transition:opacity .5s;pointer-events:none;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hamburger{display:block;}
+  .tabs{display:none;}
+  .sidebar{display:none;}
+  .bottom-nav{display:flex;}
+  .header{padding:1rem 1.2rem;}
+  .header-title h1{font-size:1.2rem;}
+  .hstat{display:none;}
+  .countdown{padding:5px 10px;}
+  .countdown-val{font-size:1.2rem;}
+  .content{padding:1rem;padding-bottom:calc(var(--bottom-bar-h) + 1rem);}
+  .main{min-height:calc(100vh - 100px);}
+  .forme-bar{padding:.4rem 1rem;}
+  #syncBar{bottom:calc(var(--bottom-bar-h) + .5rem);}
+  .modal{max-height:95vh;}
+  .modal-overlay{padding:.5rem;}
+}
+@media(min-width:769px){
+  .bottom-nav{display:none !important;}
+  .drawer{display:none !important;}
+  .drawer-overlay{display:none !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <line x1="2" y1="5" x2="18" y2="5"/><line x1="2" y1="10" x2="18" y2="10"/><line x1="2" y1="15" x2="18" y2="15"/>
+      </svg>
+    </button>
+    <div class="header-title">
+      <h1>Marathon <em>Voies Royales</em></h1>
+      <p id="headerSubtitle">Suivi adaptatif · 24 semaines · Sub-3h30</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="hstat"><div class="hstat-val" id="hKmDone">0</div><div class="hstat-label">km</div></div>
+    <div class="hstat"><div class="hstat-val" id="hSessionsDone">0</div><div class="hstat-label">séances</div></div>
+    <div class="countdown"><div class="countdown-val" id="daysLeft">—</div><div class="countdown-label">jours</div></div>
+    <button class="btn-settings" id="settingsBtn" title="Paramètres">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- FORME BAR -->
+<div class="forme-bar">
+  <span class="forme-label">Forme</span>
+  <div class="forme-dots" id="formeDots"></div>
+  <span class="forme-text" id="formeText">—</span>
+  <div class="forme-sep"></div>
+  <span class="progression-text" id="progressionText">Chargement...</span>
+  <span class="program-badge" id="programBadge" style="display:none"></span>
+</div>
+
+<!-- DESKTOP TABS -->
+<nav class="tabs" id="desktopTabs">
+  <button class="tab active" onclick="showTab('overview',this)">Vue d'ensemble</button>
+  <button class="tab" onclick="showTab('week',this)">Séances</button>
+  <button class="tab" onclick="showTab('zones',this)">Allures &amp; zones</button>
+  <button class="tab" onclick="showTab('phases',this)">Phases</button>
+  <button class="tab" onclick="showTab('timeline',this)">Timeline</button>
+</nav>
+
+<!-- LAYOUT -->
+<div class="main">
+  <!-- SIDEBAR (desktop) -->
+  <aside class="sidebar" id="desktopSidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Phases</div>
+      <div id="phaseNav"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Semaines</div>
+      <div class="week-list" id="weekNav"></div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="panel active" id="panel-overview"><div id="overviewContent"></div></div>
+    <div class="panel" id="panel-week"><div id="weekDetail"></div></div>
+    <div class="panel" id="panel-zones"><div id="zonesContent"></div></div>
+    <div class="panel" id="panel-phases"><div id="phaseDetail"></div></div>
+    <div class="panel" id="panel-timeline">
+      <div class="section-title">Timeline — volume hebdomadaire</div>
+      <div class="timeline-wrap" id="timelineWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">Navigation</span>
+    <button class="btn-close-drawer" onclick="closeDrawer()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <line x1="2" y1="2" x2="16" y2="16"/><line x1="16" y1="2" x2="2" y2="16"/>
+      </svg>
+    </button>
+  </div>
+  <div style="padding:.8rem 0;">
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Phases</div>
+      <div id="drawerPhaseNav"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Semaines</div>
+      <div class="week-list" id="drawerWeekNav"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnav-item active" id="bnav-overview" onclick="showTab('overview',null,'overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="bnav-label">Accueil</span>
+    </button>
+    <button class="bnav-item" id="bnav-week" onclick="showTab('week',null,'week')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="bnav-label">Séances</span>
+    </button>
+    <button class="bnav-item" id="bnav-zones" onclick="showTab('zones',null,'zones')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      <span class="bnav-label">Zones</span>
+    </button>
+    <button class="bnav-item" id="bnav-phases" onclick="showTab('phases',null,'phases')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="bnav-label">Phases</span>
+    </button>
+    <button class="bnav-item" id="bnav-timeline" onclick="showTab('timeline',null,'timeline')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="8 8 3 12 8 16"/><polyline points="16 8 21 12 16 16"/></svg>
+      <span class="bnav-label">Timeline</span>
+    </button>
+  </div>
+</nav>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Paramètres</span>
+      <button class="btn-close-modal" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="showSettingsTab('export',this)">Exporter</button>
+      <button class="modal-tab" onclick="showSettingsTab('import',this)">Importer</button>
+      <button class="modal-tab" onclick="showSettingsTab('programs',this)">Programmes</button>
+    </div>
+    <div class="modal-body">
+      <!-- EXPORT -->
+      <div class="settings-panel active" id="sp-export">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:1rem;line-height:1.6;">Télécharge le plan d'entraînement actuel au format JSON. Tu pourras le modifier et le réimporter plus tard, ou l'utiliser comme base pour un nouveau programme.</p>
+        <button class="btn-primary" onclick="exportPlan()">Télécharger le plan JSON</button>
+      </div>
+      <!-- IMPORT -->
+      <div class="settings-panel" id="sp-import">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:.8rem;line-height:1.6;">Colle un plan JSON ci-dessous pour mettre à jour le programme actif. Les logs existants sont conservés.</p>
+        <div class="import-error" id="importError"></div>
+        <div class="import-success" id="importSuccess"></div>
+        <textarea class="import-textarea" id="importTextarea" placeholder='{"phases":[{"label":"Base","weeks":[...]}]}'></textarea>
+        <button class="btn-primary" onclick="validateAndImport()">Valider et importer</button>
+      </div>
+      <!-- PROGRAMS -->
+      <div class="settings-panel" id="sp-programs">
+        <div class="program-list" id="programList"></div>
+        <button class="btn-secondary" onclick="toggleNewProgramForm()" id="btnNewProgram">+ Nouveau programme</button>
+        <div class="new-program-form" id="newProgramForm" style="display:none;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:.8rem;font-weight:500;">Créer un nouveau programme</div>
+          <div class="form-row">
+            <div class="form-field"><label>Nom du programme</label><input type="text" id="npName" placeholder="ex: Marathon Berlin 2027"></div>
+            <div class="form-field"><label>Nom de la course</label><input type="text" id="npRace" placeholder="ex: BMW Berlin Marathon"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>Date de course</label><input type="date" id="npDate"></div>
+            <div class="form-field"><label>Objectif chrono</label><input type="text" id="npGoal" placeholder="ex: sub-3h15"></div>
+          </div>
+          <div class="form-field" style="margin-bottom:.8rem;">
+            <label>Plan JSON (coller ici)</label>
+            <textarea id="npPlan" placeholder='{"phases":[...]}'></textarea>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-primary" onclick="createNewProgram()">Créer le programme</button>
+            <button class="btn-cancel-sm" onclick="toggleNewProgramForm()">Annuler</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="confirm-modal">
+    <h3 id="confirmTitle">Confirmation</h3>
+    <p id="confirmText"></p>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" id="confirmOk" onclick="confirmAction()">Confirmer</button>
+      <button class="btn-cancel-sm" onclick="closeConfirm()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADAPTATION MODAL -->
+<div class="modal-overlay hidden" id="adaptModal">
+  <div class="confirm-modal">
+    <h3 id="adaptModalTitle">Adaptation</h3>
+    <p id="adaptModalText"></p>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="applyAdaptation()">Appliquer</button>
+      <button class="btn-cancel-sm" onclick="closeAdaptModal()">Ignorer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   SUPABASE
+══════════════════════════════════════════════ */
+const SB_URL = 'https://hunfvnoanwpmbydnvgrm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bmZ2bm9hbndwbWJ5ZG52Z3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODkxMTcsImV4cCI6MjA4OTg2NTExN30.srJHXze2XD9GMKKO3vKyuEs4TtvV_-Gt2Xz9aGrchBI';
+const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
+
+async function sbGet(table, query='') {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${query}`, { headers: SB_HEADERS });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPost(table, body, prefer='') {
+  const h = {...SB_HEADERS};
+  if(prefer) h['Prefer'] = prefer;
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method:'POST', headers:h, body:JSON.stringify(body) });
+  if(!r.ok) throw new Error(await r.text());
+  return r.status === 204 ? null : r.json();
+}
+async function sbPatch(table, query, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${query}`, { method:'PATCH', headers:{...SB_HEADERS,'Prefer':'return=representation'}, body:JSON.stringify(body) });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(table, query) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${query}`, { method:'DELETE', headers:SB_HEADERS });
+  if(!r.ok) throw new Error(await r.text());
+}
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let activeProgram = null;   // { id, name, race_name, race_date, goal, plan, status }
+let phases = [];            // loaded from activeProgram.plan
+let _logsCache = {};        // { log_key: data } for active program
+let _logsCacheTs = 0;
+let allPrograms = [];       // all programs from DB
+
+let activePhaseIdx = 0;
+let activeWeek = { phase:0, week:0 };
+let activeTab = 'overview';
+let openForms = {};
+let ressentiValues = {};
+let pendingConfirmFn = null;
+let pendingAdaptation = null;
+let isReadOnly = false;
+
+/* ══════════════════════════════════════════════
+   TYPE CONFIG
+══════════════════════════════════════════════ */
+const typeConfig = {
+  ef:    {color:'#1D9E75',label:'Endurance fond.',bg:'rgba(29,158,117,0.15)'},
+  am:    {color:'#378ADD',label:'Allure marathon',bg:'rgba(55,138,221,0.15)'},
+  tempo: {color:'#6AAEE8',label:'Tempo run',bg:'rgba(106,174,232,0.15)'},
+  seuil: {color:'#EF9F27',label:'Seuil lactique',bg:'rgba(239,159,39,0.15)'},
+  vma:   {color:'#7F77DD',label:'VMA / fractions',bg:'rgba(127,119,221,0.15)'},
+  cotes: {color:'#E24B4A',label:'Côtes',bg:'rgba(226,75,74,0.15)'},
+  race:  {color:'#1D9E75',label:'MARATHON',bg:'rgba(29,158,117,0.2)'},
+};
+
+const zones = [
+  {label:'EF',name:'Endurance fondamentale',pace:"5'20\"–6'00\"/km",hr:'114–133 bpm',color:'#1D9E75',desc:"Base de tout l'entraînement. Conversation possible.",usage:['Footings','Récupération','Sortie longue']},
+  {label:'AM',name:'Allure marathon',pace:"4'55\"–5'00\"/km",hr:'148–158 bpm',color:'#378ADD',desc:"L'allure cible. Confortable mais concentré. Doit devenir automatique.",usage:['Sorties longues spéc.','Phase 3','Affûtage']},
+  {label:'TEMPO',name:'Tempo run',pace:"5'00\"–5'10\"/km",hr:'155–165 bpm',color:'#6AAEE8',desc:'Légèrement plus lent que le seuil. Renforce la capacité à tenir allure marathon.',usage:['Phase 2','Séances qualitatives']},
+  {label:'SEUIL',name:'Seuil lactique',pace:"4'48\"–5'00\"/km",hr:'160–171 bpm',color:'#EF9F27',desc:'Allure inconfortable mais tenable 20–30 min. Clé du sub-3h30.',usage:["Phase 2 & 3","Intervalles 8–12'"]},
+  {label:'VMA',name:'Vitesse max. aérobie',pace:"3'26\"–3'32\"/km",hr:'180–190 bpm',color:'#7F77DD',desc:'Vitesse à laquelle VO2max est atteint. Séances courtes et intenses.',usage:['Fractions 400m','Phase 2','1×/sem max']},
+  {label:'CÔTES',name:'Montées & fartlek',pace:'Effort / relâché',hr:'165–180 bpm',color:'#E24B4A',desc:'Renforce les jambes sans impact excessif.',usage:['Phase 1 (fin)','Côtes 8–10×100m']},
+];
+
+/* ══════════════════════════════════════════════
+   DEFAULT PLAN (used for first-time migration)
+══════════════════════════════════════════════ */
+const DEFAULT_PLAN = {phases:[
+  {id:0,label:'Base',color:'#1D9E75',months:'Avr – Mi-Mai',weeks_range:'1–6',vol_min:38,vol_max:52,
+   desc:"Reconstruction de la fondation aérobie. Intégralité des séances en EF et sortie longue progressive.",
+   focus:["Toutes les séances en zone EF","Sortie longue : progression 16→22km","Fréquence : 3–4 séances/sem","Striders en fin de footing (sem 2+)","Côtes légères en fin de phase (sem 6)"],
+   weeks:[
+    {n:1,title:'Reprise post-10km',vol:38,highlight:true,sessions:[
+      {d:'Mar',name:'Footing récupération',type:'ef',km:6,detail:{durée:"30'",allure:"6'00\"–6'15\"/km",fc:'<120 bpm',note:'Très léger, jambes qui se délient'}},
+      {d:'Jeu',name:'Endurance fondamentale',type:'ef',km:9,detail:{durée:"50'",allure:"5'40\"–5'50\"/km",fc:'120–130 bpm',note:'Rythme conversationnel'}},
+      {d:'Sam',name:'Sortie longue tranquille',type:'ef',km:16,detail:{durée:"1h35'",allure:"5'50\"–6'00\"/km",fc:'120–128 bpm',note:'Ravitaillement km10'}},
+      {d:'Dim',name:'Footing léger',type:'ef',km:7,detail:{durée:"40'",allure:"6'00\"/km",fc:'<118 bpm',note:'Récup active'}},
+    ]},
+    {n:2,title:'Construction légère',vol:42,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:8,detail:{durée:"44'",allure:"5'45\"–5'55\"/km",fc:'120–128 bpm',note:''}},
+      {d:'Jeu',name:'EF + striders',type:'ef',km:10,detail:{durée:"55'",allure:"5'40\"/km + 6×80m",fc:'125–132 bpm',note:'6 accélérations progressives de 80m à la fin'}},
+      {d:'Sam',name:'Sortie longue',type:'ef',km:18,detail:{durée:"1h45'",allure:"5'45\"–5'55\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Dim',name:'Footing',type:'ef',km:6,detail:{durée:"35'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:3,title:'Montée en volume',vol:48,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:9,detail:{durée:"50'",allure:"5'40\"–5'50\"/km",fc:'120–130 bpm',note:''}},
+      {d:'Jeu',name:"EF 60'",type:'ef',km:11,detail:{durée:"60'",allure:"5'30\"–5'45\"/km",fc:'125–133 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 20km',type:'ef',km:20,detail:{durée:"1h56'",allure:"5'45\"–5'55\"/km",fc:'122–130 bpm',note:'Gel énergétique km14'}},
+      {d:'Dim',name:'Footing récup',type:'ef',km:8,detail:{durée:"45'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:4,title:'Consolidation',vol:50,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:10,detail:{durée:"55'",allure:"5'35\"–5'45\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Jeu',name:'EF + côtes',type:'ef',km:12,detail:{durée:"65'",allure:'EF + 8×80m côtes',fc:'125–170 bpm',note:'8 montées de 80m'}},
+      {d:'Sam',name:'Sortie longue 22km',type:'ef',km:22,detail:{durée:"2h08'",allure:"5'45\"–5'55\"/km",fc:'122–130 bpm',note:'Gel km12 + km18'}},
+      {d:'Dim',name:'Footing',type:'ef',km:6,detail:{durée:"35'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:5,title:'Semaine de récup',vol:35,sessions:[
+      {d:'Mar',name:'Footing léger',type:'ef',km:7,detail:{durée:"40'",allure:"6'00\"/km",fc:'<118 bpm',note:'Semaine de récup — pas de forcing'}},
+      {d:'Jeu',name:"EF 45'",type:'ef',km:8,detail:{durée:"45'",allure:"5'40\"–5'50\"/km",fc:'120–128 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue réduite',type:'ef',km:16,detail:{durée:"1h33'",allure:"5'50\"–6'00\"/km",fc:'118–126 bpm',note:''}},
+      {d:'Dim',name:'Footing',type:'ef',km:4,detail:{durée:"22'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+    {n:6,title:'Fin de base',vol:52,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:10,detail:{durée:"55'",allure:"5'35\"–5'45\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Jeu',name:"EF 70' + côtes",type:'ef',km:13,detail:{durée:"70'",allure:'EF + 10×80m côtes',fc:'125–175 bpm',note:'10 côtes — signal de fin de phase base'}},
+      {d:'Sam',name:'Sortie longue 22km',type:'ef',km:22,detail:{durée:"2h08'",allure:"5'45\"–5'55\"/km",fc:'122–130 bpm',note:'Gel km12 + km18'}},
+      {d:'Dim',name:'Footing',type:'ef',km:7,detail:{durée:"40'",allure:"6'00\"/km",fc:'<118 bpm',note:''}},
+    ]},
+  ]},
+  {id:1,label:'Développement',color:'#378ADD',months:'Mi-Mai – Juil',weeks_range:'7–14',vol_min:54,vol_max:65,
+   desc:"Introduction du travail qualitatif. Seuil lactique et fractions VMA. Volume monte à 65km.",
+   focus:["Seuil lactique : 3→5 blocs de 8–12'","VMA : fractions 400m et 1km","Sorties longues : 22→27km","Garder 70% du volume en EF","1 semaine de récup toutes les 4 semaines"],
+   weeks:[
+    {n:7,title:'Intro seuil',vol:54,sessions:[
+      {d:'Mar',name:"3×10' au seuil",type:'seuil',km:12,detail:{structure:"3 rép. × 10' (récup 2')",allure:"4'55\"–5'05\"/km",fc:'160–170 bpm',note:"Échauffement 15' EF, retour 10' EF"}},
+      {d:'Jeu',name:"EF 60'",type:'ef',km:11,detail:{durée:"60'",allure:"5'40\"–5'50\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 22km',type:'ef',km:22,detail:{durée:"2h08'",allure:"5'45\"–5'55\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Dim',name:'Footing récup',type:'ef',km:9,detail:{durée:"50'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:8,title:'Seuil + volume',vol:57,sessions:[
+      {d:'Mar',name:"4×8' au seuil",type:'seuil',km:13,detail:{structure:"4 rép. × 8' (récup 90\")",allure:"4'52\"–5'02\"/km",fc:'162–172 bpm',note:'Récup plus courte = plus dur'}},
+      {d:'Jeu',name:"EF 65'",type:'ef',km:12,detail:{durée:"65'",allure:"5'35\"–5'45\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 24km',type:'ef',km:24,detail:{durée:"2h20'",allure:"5'45\"–5'55\"/km",fc:'122–132 bpm',note:'2 gels : km14 + km20'}},
+      {d:'Dim',name:'Footing',type:'ef',km:8,detail:{durée:"45'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:9,title:'Intro VMA',vol:56,sessions:[
+      {d:'Mar',name:'10×400m VMA',type:'vma',km:12,detail:{structure:"10 rép. × 400m (récup 1')",allure:"3'26\"–3'32\"/km",fc:'180–188 bpm',note:"Échauffement 20', 400m à 100% VMA"}},
+      {d:'Jeu',name:"Tempo 35'",type:'tempo',km:11,detail:{durée:"35' en continu",allure:"5'05\"–5'12\"/km",fc:'155–163 bpm',note:'Entre EF et seuil — inconfort modéré'}},
+      {d:'Sam',name:'Sortie longue 23km',type:'ef',km:23,detail:{durée:"2h14'",allure:"5'45\"–5'55\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Dim',name:'Footing récup',type:'ef',km:10,detail:{durée:"55'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:10,title:'Semaine de récup',vol:40,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:9,detail:{durée:"50'",allure:"5'50\"/km",fc:'118–126 bpm',note:'Récup — allure libre'}},
+      {d:'Jeu',name:'EF + striders',type:'ef',km:8,detail:{durée:"45' + 6 striders",allure:"5'40\"/km + accél",fc:'120–135 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 18km',type:'ef',km:18,detail:{durée:"1h45'",allure:"5'50\"–6'00\"/km",fc:'118–126 bpm',note:''}},
+      {d:'Dim',name:'Footing',type:'ef',km:5,detail:{durée:"28'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+    {n:11,title:'Charge seuil',vol:60,sessions:[
+      {d:'Mar',name:"5×10' au seuil",type:'seuil',km:14,detail:{structure:"5 rép. × 10' (récup 2')",allure:"4'52\"–5'02\"/km",fc:'162–172 bpm',note:"Séance clé — tenir jusqu'au dernier bloc"}},
+      {d:'Jeu',name:"EF 70'",type:'ef',km:13,detail:{durée:"70'",allure:"5'30\"–5'40\"/km",fc:'122–132 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 25km',type:'ef',km:25,detail:{durée:"2h26'",allure:"5'45\"–5'55\"/km",fc:'124–132 bpm',note:'Gel km14 + km21'}},
+      {d:'Dim',name:'Footing',type:'ef',km:8,detail:{durée:"45'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:12,title:'VMA + longue',vol:62,sessions:[
+      {d:'Mar',name:'12×400m VMA',type:'vma',km:13,detail:{structure:"12 rép. × 400m (récup 1')",allure:"3'26\"–3'32\"/km",fc:'180–190 bpm',note:"2 de plus qu'en S9"}},
+      {d:'Jeu',name:"Tempo 40'",type:'tempo',km:12,detail:{durée:"40' continu",allure:"5'05\"–5'10\"/km",fc:'155–163 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 26km',type:'ef',km:26,detail:{durée:"2h32'",allure:"5'45\"–5'55\"/km",fc:'124–132 bpm',note:'Gel km14 + km22'}},
+      {d:'Dim',name:'Footing',type:'ef',km:11,detail:{durée:"60'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:13,title:'Récup active',vol:42,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:10,detail:{durée:"55'",allure:"5'50\"/km",fc:'118–126 bpm',note:'Récup — allure libre'}},
+      {d:'Jeu',name:"Seuil court 2×10'",type:'seuil',km:9,detail:{structure:"2 rép. × 10' (récup 3')",allure:"4'55\"/km",fc:'160–170 bpm',note:'Maintenir le toucher seuil'}},
+      {d:'Sam',name:'Sortie longue 20km',type:'ef',km:20,detail:{durée:"1h56'",allure:"5'50\"–6'00\"/km",fc:'118–128 bpm',note:''}},
+      {d:'Dim',name:'Footing',type:'ef',km:3,detail:{durée:"18'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+    {n:14,title:'Montée en charge',vol:65,sessions:[
+      {d:'Mar',name:"5×10' seuil (r:90\")",type:'seuil',km:15,detail:{structure:"5 rép. × 10' (récup 90\")",allure:"4'50\"–5'00\"/km",fc:'163–173 bpm',note:'Récup réduite — séance difficile'}},
+      {d:'Jeu',name:"EF 70'",type:'ef',km:13,detail:{durée:"70'",allure:"5'30\"–5'40\"/km",fc:'122–132 bpm',note:''}},
+      {d:'Sam',name:'Sortie longue 27km',type:'ef',km:27,detail:{durée:"2h38'",allure:"5'45\"–5'55\"/km",fc:'124–132 bpm',note:'Gel km14 + km22 + km25'}},
+      {d:'Dim',name:'Footing',type:'ef',km:10,detail:{durée:"55'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+  ]},
+  {id:2,label:'Spécifique',color:'#7F77DD',months:'Août – Mi-Sep',weeks_range:'15–20',vol_min:46,vol_max:70,
+   desc:"Phase décisive : séances à allure marathon intégrées dans les sorties longues. Les longues atteignent 32km.",
+   focus:["Allure marathon dans les longues : 10→20km à AM","Sortie clé S18 : 32km (20km à AM)","Seuil pour maintenir la vitesse de base","1 séance EF longue/semaine","Nutrition : gel toutes les 45'"],
+   weeks:[
+    {n:15,title:'Intro allure marathon',vol:65,sessions:[
+      {d:'Mar',name:'EF + 6km à AM',type:'am',km:14,detail:{structure:"25' EF + 6km AM + 15' EF",allure:"4'55\"–5'00\"/km sur les 6km",fc:'148–158 bpm',note:"Premier contact sérieux avec l'allure cible"}},
+      {d:'Jeu',name:"Seuil 3×12'",type:'seuil',km:13,detail:{structure:"3 rép. × 12' (récup 2'30)",allure:"4'50\"–5'00\"/km",fc:'163–173 bpm',note:''}},
+      {d:'Sam',name:'28km (10km à AM)',type:'am',km:28,detail:{structure:'18km EF + 10km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'122→155 bpm',note:'Gel km14 + km22. Terminer à AM = stimulation spécifique'}},
+      {d:'Dim',name:'Footing récup',type:'ef',km:10,detail:{durée:"55'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:16,title:'Longue spécifique',vol:68,sessions:[
+      {d:'Mar',name:'10km à AM',type:'am',km:14,detail:{structure:"20' EF + 10km AM + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Jeu',name:"EF 65'",type:'ef',km:12,detail:{durée:"65'",allure:"5'35\"–5'45\"/km",fc:'122–130 bpm',note:''}},
+      {d:'Sam',name:'30km (15km à AM)',type:'am',km:30,detail:{structure:'15km EF + 15km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'122→155 bpm',note:'Gel km12 + km20 + km26. Séance fondatrice.'}},
+      {d:'Dim',name:'Footing récup',type:'ef',km:12,detail:{durée:"1h05'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:17,title:'Semaine de récup',vol:46,sessions:[
+      {d:'Mar',name:'Footing EF',type:'ef',km:10,detail:{durée:"55'",allure:"5'50\"/km",fc:'118–126 bpm',note:'Récup bienvenue après S16'}},
+      {d:'Jeu',name:'5km à AM',type:'am',km:10,detail:{structure:"20' EF + 5km AM + 15' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:'Maintenir le toucher allure'}},
+      {d:'Sam',name:'22km tranquilles',type:'ef',km:22,detail:{durée:"2h08'",allure:"5'50\"–6'00\"/km",fc:'118–128 bpm',note:"Pas d'allure marathon cette semaine"}},
+      {d:'Dim',name:'Footing léger',type:'ef',km:4,detail:{durée:"22'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+    {n:18,title:'Point clé : 32km',vol:70,highlight:true,sessions:[
+      {d:'Mar',name:'AM 10km en continu',type:'am',km:14,detail:{structure:"20' EF + 10km AM + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Jeu',name:"Seuil 4×10'",type:'seuil',km:13,detail:{structure:"4 rép. × 10' (récup 2')",allure:"4'50\"–5'00\"/km",fc:'162–172 bpm',note:''}},
+      {d:'Sam',name:'32km (20km à AM)',type:'am',km:32,detail:{structure:'12km EF + 20km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'122→155 bpm',note:'SÉANCE CLÉ. Gel km12 + km20 + km27.'}},
+      {d:'Dim',name:'Footing récup',type:'ef',km:11,detail:{durée:"1h00",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:19,title:'Charge spécifique',vol:68,sessions:[
+      {d:'Mar',name:'AM 12km',type:'am',km:16,detail:{structure:"20' EF + 12km AM + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Jeu',name:"EF 70'",type:'ef',km:13,detail:{durée:"70'",allure:"5'30\"–5'40\"/km",fc:'122–132 bpm',note:''}},
+      {d:'Sam',name:'30km (18km à AM)',type:'am',km:30,detail:{structure:'12km EF + 18km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'122→155 bpm',note:'Gel km12 + km20 + km27'}},
+      {d:'Dim',name:'Footing',type:'ef',km:9,detail:{durée:"50'",allure:"6'00\"/km",fc:'<120 bpm',note:''}},
+    ]},
+    {n:20,title:'Récup pré-affûtage',vol:48,sessions:[
+      {d:'Mar',name:'AM 8km',type:'am',km:12,detail:{structure:"20' EF + 8km AM + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Jeu',name:"EF 50'",type:'ef',km:9,detail:{durée:"50'",allure:"5'45\"/km",fc:'120–128 bpm',note:''}},
+      {d:'Sam',name:'22km (10km à AM)',type:'am',km:22,detail:{structure:'12km EF + 10km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'122→152 bpm',note:''}},
+      {d:'Dim',name:'Footing léger',type:'ef',km:5,detail:{durée:"28'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+  ]},
+  {id:3,label:'Affûtage',color:'#EF9F27',months:'Mi-Sep – 26 Oct',weeks_range:'21–24',vol_min:14,vol_max:52,
+   desc:"Réduction progressive du volume. Le corps se régénère. Ne pas paniquer face à la baisse de volume.",
+   focus:['Volume : 52 → 40 → 30 → 14km','Garder 1 séance AM/semaine','Pas de séance intense après S22',"Dernier long run : 14km à S23",'Logistique course : dossard, nutrition, échauffement'],
+   weeks:[
+    {n:21,title:'Début affûtage',vol:52,sessions:[
+      {d:'Mar',name:'AM 8km',type:'am',km:12,detail:{structure:"20' EF + 8km AM + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Jeu',name:'EF + 4×1km à AM',type:'am',km:12,detail:{structure:"30' EF + 4×1km AM (r:2') + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Sam',name:'24km (12km à AM)',type:'am',km:24,detail:{structure:'12km EF + 12km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'122→155 bpm',note:''}},
+      {d:'Dim',name:'Footing léger',type:'ef',km:4,detail:{durée:"22'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+    {n:22,title:'Réduction volume',vol:40,sessions:[
+      {d:'Mar',name:'AM 6km',type:'am',km:10,detail:{structure:"20' EF + 6km AM + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:''}},
+      {d:'Jeu',name:"EF 45' + striders",type:'ef',km:9,detail:{durée:"45' + 8 striders",allure:"5'45\"/km + accél",fc:'120–138 bpm',note:'Jambes légères et vives'}},
+      {d:'Sam',name:'18km (8km à AM)',type:'am',km:18,detail:{structure:'10km EF + 8km AM',allure:"5'50\"/km puis 4'55\"–5'00\"/km",fc:'120→152 bpm',note:''}},
+      {d:'Dim',name:'Footing léger',type:'ef',km:3,detail:{durée:"18'",allure:"6'10\"/km",fc:'<115 bpm',note:''}},
+    ]},
+    {n:23,title:'Affûtage marqué',vol:30,sessions:[
+      {d:'Mar',name:'5×1km à AM',type:'am',km:9,detail:{structure:"20' EF + 5×1km AM (r:2') + 10' EF",allure:"4'55\"–5'00\"/km",fc:'148–158 bpm',note:'Rappel neuro-musculaire'}},
+      {d:'Jeu',name:"Footing 35'",type:'ef',km:7,detail:{durée:"35'",allure:"6'00\"/km",fc:'<118 bpm',note:''}},
+      {d:'Sam',name:'14km tranquilles',type:'ef',km:14,detail:{durée:"1h20'",allure:"5'55\"–6'05\"/km",fc:'115–124 bpm',note:'Dernier long run — plaisir pur'}},
+    ]},
+    {n:24,title:'Semaine du marathon',vol:14,highlight:true,sessions:[
+      {d:'Lun',name:"Footing 20'",type:'ef',km:4,detail:{durée:"20'",allure:"6'00\"/km",fc:'<115 bpm',note:'Garder les jambes actives'}},
+      {d:'Mer',name:"20' + 3×1km à AM",type:'am',km:6,detail:{structure:"20' EF + 3×1km AM + 5' EF",allure:"4'55\"–5'00\"/km",fc:'145–155 bpm',note:'Dernier rappel allure'}},
+      {d:'Ven',name:"Jogging 15'",type:'ef',km:3,detail:{durée:"15'",allure:"6'10\"/km",fc:'<112 bpm',note:'Dernière sortie. Récupérer les dossards.'}},
+      {d:'Dim',name:'MARATHON — Voies Royales',type:'race',km:42,detail:{objectif:"3h29'59\"",allure:"4'55\"–5'00\"/km",fc:'148–162 bpm',note:"Départ 8h00 Avenue Jules Rimet. Gel toutes les 45'. Ne pas partir trop vite !"}},
+    ]},
+  ]},
+]};
+
+/* ══════════════════════════════════════════════
+   SUPABASE STORAGE
+══════════════════════════════════════════════ */
+async function loadAllPrograms() {
+  try {
+    const rows = await sbGet('marathon_programs', '?order=created_at.asc');
+    return rows;
+  } catch(e) { console.warn('loadAllPrograms failed', e); return []; }
+}
+
+async function loadLogsForProgram(programId) {
+  try {
+    const rows = await sbGet('marathon_logs', `?program_id=eq.${programId}&select=log_key,data`);
+    const obj = {};
+    rows.forEach(r => { obj[r.log_key] = r.data; });
+    return obj;
+  } catch(e) {
+    console.warn('loadLogs failed', e);
+    try { return JSON.parse(localStorage.getItem('marathon_vr_fallback') || '{}'); } catch(e2) { return {}; }
+  }
+}
+
+async function upsertLog(programId, key, data) {
+  if(!_logsCache) _logsCache = {};
+  _logsCache[key] = data;
+  // Fallback local
+  try {
+    const fb = JSON.parse(localStorage.getItem('marathon_vr_fallback') || '{}');
+    fb[key] = data; localStorage.setItem('marathon_vr_fallback', JSON.stringify(fb));
+  } catch(e) {}
+  try {
+    await sbPost('marathon_logs', { log_key: key, data, program_id: programId, updated_at: new Date().toISOString() }, 'resolution=merge-duplicates');
+  } catch(e) { console.warn('upsertLog failed', e); }
+}
+
+async function deleteLog(programId, key) {
+  if(_logsCache) delete _logsCache[key];
+  try { await sbDelete('marathon_logs', `?log_key=eq.${key}&program_id=eq.${programId}`); } catch(e) {}
+}
+
+async function createProgram(name, raceName, raceDate, goal, plan) {
+  const row = await sbPost('marathon_programs',
+    { name, race_name: raceName, race_date: raceDate || null, goal, plan, status: 'active' },
+    'return=representation'
+  );
+  return Array.isArray(row) ? row[0] : row;
+}
+
+async function archiveProgram(id) {
+  await sbPatch('marathon_programs', `?id=eq.${id}`, { status: 'archived' });
+}
+
+async function reactivateProgram(id) {
+  // Archive current active first
+  if(activeProgram && activeProgram.id !== id) {
+    await sbPatch('marathon_programs', `?id=eq.${activeProgram.id}`, { status: 'archived' });
+  }
+  await sbPatch('marathon_programs', `?id=eq.${id}`, { status: 'active' });
+}
+
+async function updateProgramPlan(id, plan) {
+  await sbPatch('marathon_programs', `?id=eq.${id}`, { plan });
+}
+
+/* Migrate old logs (no program_id) to new program */
+async function migrateOldLogs(programId) {
+  try {
+    const old = await sbGet('marathon_logs', '?program_id=is.null');
+    if(old.length) {
+      for(const row of old) {
+        await sbPatch('marathon_logs', `?id=eq.${row.id}`, { program_id: programId });
+      }
+    }
+  } catch(e) { console.warn('migration failed', e); }
+}
+
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+async function init() {
+  showSyncStatus('loading');
+  try {
+    allPrograms = await loadAllPrograms();
+    if(allPrograms.length === 0) {
+      // First run — create default program and migrate
+      const prog = await createProgram('Voies Royales 2026', 'Voies Royales de Saint-Denis', '2026-10-26', 'sub-3h30', DEFAULT_PLAN);
+      allPrograms = [prog];
+      await migrateOldLogs(prog.id);
+    }
+    const active = allPrograms.find(p => p.status === 'active') || allPrograms[0];
+    await activateProgram(active, false);
+    showSyncStatus('ok');
+  } catch(e) {
+    console.error('Init failed', e);
+    // Fallback: use default plan with localStorage
+    phases = DEFAULT_PLAN.phases;
+    _logsCache = {};
+    try { _logsCache = JSON.parse(localStorage.getItem('marathon_vr_fallback') || '{}'); } catch(e2) {}
+    buildUI();
+    showSyncStatus('error');
+  }
+}
+
+async function activateProgram(prog, reload=true) {
+  activeProgram = prog;
+  isReadOnly = prog.status === 'archived';
+  phases = prog.plan.phases || [];
+  _logsCache = await loadLogsForProgram(prog.id);
+  activePhaseIdx = 0;
+  activeWeek = { phase:0, week:0 };
+  if(reload) buildUI();
+  else buildUI();
+  updateProgramBadge();
+  updateCountdown();
+}
+
+function buildUI() {
+  buildSidebar();
+  renderZones();
+  renderOverview();
+  updateFormBar();
+}
+
+/* ══════════════════════════════════════════════
+   PROGRAM BADGE & COUNTDOWN
+══════════════════════════════════════════════ */
+function updateProgramBadge() {
+  const badge = document.getElementById('programBadge');
+  badge.textContent = activeProgram ? activeProgram.name : '';
+  badge.style.display = activeProgram ? 'inline-block' : 'none';
+  badge.className = 'program-badge' + (isReadOnly ? ' archived' : '');
+  document.getElementById('headerSubtitle').textContent = isReadOnly
+    ? `${activeProgram?.name || ''} — Lecture seule`
+    : `Suivi adaptatif · ${phases.reduce((a,p)=>a+p.weeks.length,0)} semaines`;
+}
+
+function updateCountdown() {
+  const dateStr = activeProgram?.race_date;
+  if(!dateStr) { document.getElementById('daysLeft').textContent = '—'; return; }
+  const race = new Date(dateStr + 'T08:00:00');
+  const d = Math.ceil((race - new Date()) / 86400000);
+  document.getElementById('daysLeft').textContent = d > 0 ? d : '0';
+}
+
+/* ══════════════════════════════════════════════
+   LOG HELPERS
+══════════════════════════════════════════════ */
+function getLogKey(pi, wi, si) { return `${pi}_${wi}_${si}`; }
+function getLog(pi, wi, si) { return (_logsCache || {})[getLogKey(pi,wi,si)] || null; }
+
+async function setLog(pi, wi, si, data) {
+  const key = getLogKey(pi,wi,si);
+  await upsertLog(activeProgram.id, key, data);
+}
+
+async function clearLogEntry(pi, wi, si) {
+  const key = getLogKey(pi,wi,si);
+  await deleteLog(activeProgram.id, key);
+  delete ressentiValues[key];
+  refresh();
+}
+
+/* ══════════════════════════════════════════════
+   MOBILE NAV
+══════════════════════════════════════════════ */
+function toggleDrawer() {
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('drawerOverlay');
+  drawer.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+/* ══════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════ */
+function showTab(id, btn, bnavId) {
+  activeTab = id;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  // Desktop tabs
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  // Bottom nav
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  const bnavTarget = bnavId || id;
+  const bnavEl = document.getElementById('bnav-'+bnavTarget);
+  if(bnavEl) bnavEl.classList.add('active');
+  // Render
+  if(id==='overview') renderOverview();
+  if(id==='week') renderWeekDetail(activeWeek.phase, activeWeek.week);
+  if(id==='zones') renderZones();
+  if(id==='phases') renderPhaseDetail(activePhaseIdx);
+  if(id==='timeline') renderTimeline();
+  closeDrawer();
+}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR (desktop + drawer)
+══════════════════════════════════════════════ */
+function buildSidebar() {
+  buildPhaseNav('phaseNav');
+  buildPhaseNav('drawerPhaseNav');
+  buildWeekNav(activeWeek.phase, 'weekNav');
+  buildWeekNav(activeWeek.phase, 'drawerWeekNav');
+}
+
+function buildPhaseNav(containerId) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = '';
+  phases.forEach((p,pi) => {
+    const div = document.createElement('div');
+    div.className = 'phase-item'+(pi===0?' active':'');
+    div.style.setProperty('--phase-color', p.color);
+    div.innerHTML = `<div class="phase-dot"></div><div><div class="phase-name">${p.label}</div><div class="phase-weeks">Sem. ${p.weeks_range} · ${p.months}</div></div>`;
+    div.onclick = () => {
+      activePhaseIdx = pi;
+      activeWeek = {phase:pi,week:0};
+      document.querySelectorAll(`#${containerId} .phase-item`).forEach(e => e.classList.remove('active'));
+      div.classList.add('active');
+      buildWeekNav(pi, containerId === 'drawerPhaseNav' ? 'drawerWeekNav' : 'weekNav');
+      if(activeTab==='phases') renderPhaseDetail(pi);
+      if(activeTab==='week') renderWeekDetail(pi,0);
+    };
+    el.appendChild(div);
+  });
+}
+
+function buildWeekNav(pi, containerId='weekNav') {
+  const el = document.getElementById(containerId);
+  if(!el || !phases[pi]) return;
+  el.innerHTML = '';
+  phases[pi].weeks.forEach((w,wi) => {
+    const doneCount = w.sessions.filter((_,si) => { const l = getLog(pi,wi,si); return l && l.status==='done'; }).length;
+    const allDone = doneCount === w.sessions.length;
+    const partial = doneCount > 0 && !allDone;
+    const div = document.createElement('div');
+    div.className = 'week-item'+(wi===activeWeek.week&&pi===activeWeek.phase?' active':'');
+    div.style.setProperty('--phase-color', phases[pi].color);
+    const dotColor = allDone ? '#1D9E75' : partial ? '#EF9F27' : 'transparent';
+    div.innerHTML = `<span class="week-num-label">S${w.n}</span><span class="week-item-title">${w.title}</span><div class="week-status-dot" style="background:${dotColor}"></div>${w.highlight?'<div class="week-highlight-dot"></div>':''}`;
+    div.onclick = () => {
+      activeWeek = {phase:pi,week:wi};
+      document.querySelectorAll(`#${containerId} .week-item`).forEach(e => e.classList.remove('active'));
+      div.classList.add('active');
+      const tabBtn = document.querySelector('.tabs .tab:nth-child(2)');
+      showTab('week', tabBtn, 'week');
+    };
+    el.appendChild(div);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   ANALYTICS
+══════════════════════════════════════════════ */
+function getAllSessions() {
+  const out = [];
+  phases.forEach((p,pi) => p.weeks.forEach((w,wi) => w.sessions.forEach((s,si) => {
+    out.push({pi,wi,si,p,w,s,log:getLog(pi,wi,si)});
+  })));
+  return out;
+}
+
+function getStats() {
+  const all = getAllSessions();
+  const done = all.filter(x => x.log?.status==='done');
+  const skipped = all.filter(x => x.log?.status==='skipped');
+  const kmDone = done.reduce((a,x) => a + (x.log.kmActual || x.s.km), 0);
+  const ressentis = done.filter(x => x.log.ressenti).slice(-5).map(x => x.log.ressenti);
+  const avgRessenti = ressentis.length ? Math.round(ressentis.reduce((a,b)=>a+b,0)/ressentis.length*10)/10 : null;
+  return {done:done.length, skipped:skipped.length, kmDone, avgRessenti};
+}
+
+function getFormeScore() {
+  const all = getAllSessions();
+  const recent = all.filter(x => x.log?.status==='done').slice(-6);
+  const rs = recent.filter(x => x.log.ressenti).map(x => x.log.ressenti);
+  return rs.length ? rs.reduce((a,b)=>a+b,0)/rs.length : null;
+}
+
+function getPaceDelta(pi,wi,si) {
+  const log = getLog(pi,wi,si);
+  if(!log?.paceActual || !log?.paceTarget) return null;
+  const parse = s => { const [m,sec] = s.split(':').map(Number); return m*60+sec; };
+  const a = parse(log.paceActual), b = parse(log.paceTarget);
+  return isNaN(a)||isNaN(b) ? null : a-b;
+}
+
+function deltaBadge(pi,wi,si) {
+  const d = getPaceDelta(pi,wi,si);
+  if(d===null||Math.abs(d)<5) return '';
+  return `<span class="delta-badge ${d>15?'delta-neg':d<-10?'delta-pos':'delta-neg'}">${d>0?'+':''}${d}s</span>`;
+}
+
+function getAdaptationSuggestion() {
+  const all = getAllSessions();
+  const recent = all.filter(x => x.log?.status==='done').slice(-4);
+  if(recent.length < 2) return null;
+  const skipped = all.filter(x => x.log?.status==='skipped').slice(-6).length;
+  const low = recent.filter(x => x.log.ressenti && x.log.ressenti<=2).length;
+  const high = recent.filter(x => x.log.ressenti && x.log.ressenti>=4).length;
+  if(low>=2) return {type:'reduce',title:'Signe de fatigue',text:`<strong>${low} séances difficiles</strong> sur les 4 dernières. Réduire le volume de la prochaine semaine de 15% et convertir la séance intensive en footing EF.`};
+  if(skipped>=3) return {type:'catchup',title:'Séances manquées',text:`<strong>${skipped} séances sautées</strong> récemment. Inutile de rattraper — continuez le plan normalement.`};
+  if(high>=3) return {type:'progress',title:'Excellente forme !',text:`<strong>${high} séances très bien ressenties</strong>. Tu peux envisager d'ajouter 5–8% de volume ou d'augmenter légèrement l'intensité des séances seuil.`};
+  return null;
+}
+
+function getWeekAdaptation(pi,wi) {
+  if(wi===0||!phases[pi]?.weeks[wi-1]) return null;
+  const prevLogs = phases[pi].weeks[wi-1].sessions.map((_,si) => getLog(pi,wi-1,si)).filter(l => l?.status==='done'&&l.ressenti).map(l => l.ressenti);
+  if(prevLogs.length < 2) return null;
+  const avg = prevLogs.reduce((a,b)=>a+b,0)/prevLogs.length;
+  if(avg<=1.8) return {title:'Semaine allégée',text:`Semaine précédente difficile (${avg.toFixed(1)}/5). EF réduits de 20%.`,factor:0.8};
+  if(avg>=4.5) return {title:'Charge augmentée',text:`Excellente semaine (${avg.toFixed(1)}/5). EF +5% de volume.`,factor:1.05};
+  return null;
+}
+
+/* ══════════════════════════════════════════════
+   FORME BAR
+══════════════════════════════════════════════ */
+function updateFormBar() {
+  const score = getFormeScore();
+  const stats = getStats();
+  const dots = document.getElementById('formeDots');
+  const text = document.getElementById('formeText');
+  dots.innerHTML = '';
+  for(let i=1;i<=5;i++) {
+    const d = document.createElement('div');
+    d.className = 'forme-dot';
+    if(score!==null && i<=Math.round(score)) d.classList.add(score<=2?'active-red':score<=3?'active-amber':'active-teal');
+    dots.appendChild(d);
+  }
+  text.textContent = score===null?'En attente':score<=2?'Fatigue':score<=3?'Forme correcte':score<=4?'Bonne forme':'Excellente forme !';
+  document.getElementById('hKmDone').textContent = stats.kmDone;
+  document.getElementById('hSessionsDone').textContent = stats.done;
+  document.getElementById('progressionText').innerHTML = stats.done===0
+    ? 'Aucune séance enregistrée'
+    : `<strong>${stats.done} séances</strong> · <strong>${stats.kmDone} km</strong>`;
+}
+
+/* ══════════════════════════════════════════════
+   OVERVIEW
+══════════════════════════════════════════════ */
+function renderOverview() {
+  const el = document.getElementById('overviewContent');
+  const stats = getStats();
+  const all = getAllSessions();
+  const total = all.length, totalKm = all.reduce((a,x)=>a+x.s.km,0);
+  const pct = Math.round(stats.done/total*100);
+  const adapt = getAdaptationSuggestion();
+  const nextTodo = all.filter(x => !x.log).slice(0,3);
+  const recentDone = all.filter(x => x.log?.status==='done').slice(-3).reverse();
+
+  let adaptHtml = '';
+  if(adapt) adaptHtml = `<div class="adapt-banner"><div class="adapt-icon">${adapt.type==='reduce'?'⚠':adapt.type==='progress'?'↑':'→'}</div><div class="adapt-text"><strong>${adapt.title}</strong><br>${adapt.text}</div></div>`;
+
+  let readonlyHtml = '';
+  if(isReadOnly) readonlyHtml = `<div class="readonly-banner"><span style="color:var(--amber)">⏸</span> Programme archivé — consultation en lecture seule</div>`;
+
+  let nextHtml = '';
+  if(nextTodo.length && !isReadOnly) {
+    nextHtml = `<div class="section-title">Prochaines séances</div><div style="display:flex;flex-direction:column;gap:7px;margin-bottom:1.5rem;">`;
+    nextTodo.forEach(x => {
+      const tc = typeConfig[x.s.type]||typeConfig.ef;
+      nextHtml += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="goToSession(${x.pi},${x.wi})">
+        <div style="width:3px;height:32px;background:${tc.color};border-radius:2px;flex-shrink:0;"></div>
+        <div style="flex:1;"><div style="font-size:10px;color:var(--text3);">S${x.w.n} · ${x.w.title}</div><div style="font-size:12px;color:var(--text);margin-top:1px;">${x.s.d} — ${x.s.name}</div></div>
+        <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:${tc.bg};color:${tc.color};">${tc.label}</span>
+        <span style="font-family:var(--font-display);font-size:1rem;color:var(--text2);">${x.s.km}<span style="font-size:10px;">km</span></span>
+      </div>`;
+    });
+    nextHtml += '</div>';
+  }
+
+  let recentHtml = '';
+  const resColors = ['','#E24B4A','#EF9F27','#888780','#378ADD','#1D9E75'];
+  const resLabels = ['','Très dur','Dur','Moyen','Bien','Excellent'];
+  if(recentDone.length) {
+    recentHtml = `<div class="section-title">Dernières séances</div><div style="display:flex;flex-direction:column;gap:7px;margin-bottom:1.5rem;">`;
+    recentDone.forEach(x => {
+      const tc = typeConfig[x.s.type]||typeConfig.ef;
+      const res = x.log.ressenti;
+      recentHtml += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;display:flex;align-items:center;gap:10px;">
+        <div style="width:3px;height:32px;background:${tc.color};border-radius:2px;flex-shrink:0;opacity:.5;"></div>
+        <div style="flex:1;"><div style="font-size:10px;color:var(--text3);">S${x.w.n} · ${x.s.d}</div><div style="font-size:12px;color:var(--text2);margin-top:1px;">${x.s.name}</div></div>
+        ${x.log.kmActual?`<span style="font-size:11px;color:var(--text2);">${x.log.kmActual}km</span>`:''}
+        ${res?`<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:${resColors[res]}22;color:${resColors[res]};">${resLabels[res]}</span>`:''}
+        <span style="color:var(--teal);">✓</span>
+      </div>`;
+    });
+    recentHtml += '</div>';
+  }
+
+  el.innerHTML = `
+    ${readonlyHtml}${adaptHtml}
+    <div class="section-title">Progression</div>
+    <div class="overview-grid">
+      <div class="stat-card"><div class="stat-label">Séances</div><div class="stat-val" style="color:var(--teal)">${stats.done}<span style="font-size:.8rem;color:var(--text3)">/${total}</span></div><div class="stat-sub">${pct}% du plan</div></div>
+      <div class="stat-card"><div class="stat-label">Km</div><div class="stat-val">${stats.kmDone}<span style="font-size:.8rem;color:var(--text3)">/${totalKm}</span></div><div class="stat-sub">complétés</div></div>
+      <div class="stat-card"><div class="stat-label">Sautées</div><div class="stat-val" style="color:${stats.skipped>2?'var(--amber)':'var(--text2)'}">${stats.skipped}</div><div class="stat-sub">${stats.skipped<=2?'OK':'Surveiller'}</div></div>
+      <div class="stat-card"><div class="stat-label">Ressenti</div><div class="stat-val">${stats.avgRessenti||'—'}<span style="font-size:.8rem;color:var(--text3)">/5</span></div><div class="stat-sub">6 dernières</div></div>
+    </div>
+    <div style="height:5px;background:var(--surface3);border-radius:3px;margin-bottom:1.5rem;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--teal);border-radius:3px;"></div></div>
+    ${nextHtml}${recentHtml}
+    <div class="section-title">Objectif course</div>
+    <div class="marathon-target">
+      <div class="target-item"><div class="tlabel">Objectif</div><div class="tval">${activeProgram?.goal||'—'}</div></div>
+      <div class="tdivider"></div>
+      <div class="target-item"><div class="tlabel">Course</div><div class="tval" style="font-size:1rem;">${activeProgram?.race_name||'—'}</div><div class="tsub">${activeProgram?.race_date||''}</div></div>
+      <div class="tdivider"></div>
+      <div class="target-item"><div class="tlabel">FC moy. 2024</div><div class="tval">170 bpm</div><div class="tsub">FCmax ~190</div></div>
+    </div>`;
+}
+
+function goToSession(pi, wi) {
+  activeWeek = {phase:pi,week:wi};
+  activePhaseIdx = pi;
+  buildWeekNav(pi, 'weekNav');
+  buildWeekNav(pi, 'drawerWeekNav');
+  document.querySelectorAll('.phase-item').forEach((e,i) => e.classList.toggle('active',i===pi));
+  const tabBtn = document.querySelector('.tabs .tab:nth-child(2)');
+  showTab('week', tabBtn, 'week');
+}
+
+/* ══════════════════════════════════════════════
+   WEEK DETAIL
+══════════════════════════════════════════════ */
+function renderWeekDetail(pi, wi) {
+  if(!phases[pi]?.weeks[wi]) return;
+  const p = phases[pi], w = p.weeks[wi];
+  const pct = Math.round(w.vol/75*100);
+  const el = document.getElementById('weekDetail');
+  const adapt = getWeekAdaptation(pi,wi);
+
+  let sessHtml = '';
+  w.sessions.forEach((s,si) => {
+    const tc = typeConfig[s.type]||typeConfig.ef;
+    const log = getLog(pi,wi,si);
+    const status = log?.status || 'todo';
+    const displayKm = (adapt && s.type==='ef') ? Math.round(s.km*adapt.factor) : s.km;
+    const isAdj = displayKm !== s.km;
+    const fk = getLogKey(pi,wi,si);
+
+    const detailItems = Object.entries(s.detail).filter(([k,v])=>v&&k!=='note').map(([k,v])=>{
+      const L = {durée:'Durée',allure:'Allure',fc:'FC cible',structure:'Structure',objectif:'Objectif'};
+      return `<div class="sdet"><span class="sdet-label">${L[k]||k} </span><span class="sdet-val">${v}</span></div>`;
+    }).join('');
+
+    let logResHtml = '';
+    if(log?.status==='done') {
+      const res = log.ressenti;
+      logResHtml = `<div class="log-result">
+        <div class="log-result-row">
+          ${log.kmActual?`<span class="log-res-item"><span class="log-res-label">Dist </span><span class="log-res-val">${log.kmActual}km</span></span>`:''}
+          ${log.paceActual?`<span class="log-res-item"><span class="log-res-label">Allure </span><span class="log-res-val">${log.paceActual}/km</span>${deltaBadge(pi,wi,si)}</span>`:''}
+          ${log.fcActual?`<span class="log-res-item"><span class="log-res-label">FC </span><span class="log-res-val">${log.fcActual}bpm</span></span>`:''}
+          ${res?`<span class="log-res-item" style="color:${['','#E24B4A','#EF9F27','#888780','#378ADD','#1D9E75'][res]}">${['','Très dur','Dur','Moyen','Bien','Excellent'][res]}</span>`:''}
+        </div>
+        ${log.comment?`<div class="log-res-comment">${log.comment}</div>`:''}
+      </div>`;
+    } else if(log?.status==='skipped') {
+      logResHtml = `<div class="log-result skipped-result"><span style="color:var(--text3);font-size:11px;">Sautée${log.comment?' — '+log.comment:''}</span></div>`;
+    }
+
+    const btns = isReadOnly ? '' : status==='done'
+      ? `<button class="btn-log edit-btn" onclick="openForm('${fk}')">Modifier</button><button class="btn-log skip-btn" onclick="clearLogEntry(${pi},${wi},${si})">Effacer</button>`
+      : status==='skipped'
+      ? `<button class="btn-log edit-btn" onclick="clearLogEntry(${pi},${wi},${si})">Rétablir</button>`
+      : `<button class="btn-log done-btn" onclick="openForm('${fk}')">Enregistrer</button><button class="btn-log skip-btn" onclick="saveLog(${pi},${wi},${si},'skipped')">Sautée</button>`;
+
+    const formHtml = isReadOnly ? '' : `<div class="log-form ${openForms[fk]?'open':''}" id="form_${fk}">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em;">Ressenti</div>
+      <div class="ressenti-row" id="ressenti_${fk}">
+        ${[['1','Très dur'],['2','Dur'],['3','Moyen'],['4','Bien'],['5','Top']].map(([v,l])=>
+          `<button class="ressenti-btn ${log?.ressenti==v?'selected-'+v:''}" onclick="setRessenti('${fk}','${v}')">${l}</button>`).join('')}
+      </div>
+      <div class="log-row">
+        <div class="log-field"><label>Distance (km)</label><input type="number" step="0.1" id="km_${fk}" value="${log?.kmActual||''}" placeholder="${s.km}"></div>
+        <div class="log-field"><label>Allure (mm:ss)</label><input type="text" id="pace_${fk}" value="${log?.paceActual||''}" placeholder="ex: 5:45"></div>
+        <div class="log-field"><label>FC moy (bpm)</label><input type="number" id="fc_${fk}" value="${log?.fcActual||''}" placeholder="—"></div>
+      </div>
+      <div class="log-field" style="margin-bottom:8px;"><label>Commentaire</label><textarea id="comment_${fk}" placeholder="Notes, conditions...">${log?.comment||''}</textarea></div>
+      <div class="log-actions">
+        <button class="btn-save" onclick="saveLog(${pi},${wi},${si},'done')">Enregistrer</button>
+        <button class="btn-cancel-sm" onclick="closeForm('${fk}')">Annuler</button>
+      </div>
+    </div>`;
+
+    sessHtml += `<div class="session-card ${status}${isReadOnly?' readonly':''}" style="--s-color:${tc.color}">
+      ${isAdj?`<div style="position:absolute;right:50px;top:10px;font-size:9px;padding:2px 5px;border-radius:4px;background:var(--amber-dim);color:var(--amber);">adapté</div>`:''}
+      <div class="session-top">
+        <div class="session-day-badge">${s.d}</div>
+        <div class="session-body">
+          <span class="session-type-badge" style="background:${tc.bg};color:${tc.color};">${tc.label}</span>
+          <div class="session-name">${s.name}</div>
+          <div class="session-details">${detailItems}</div>
+          ${s.detail.note?`<div class="session-note">${s.detail.note}</div>`:''}
+        </div>
+        <div class="session-dist-badge">${displayKm}<span>km</span></div>
+      </div>
+      ${logResHtml}
+      <div class="log-toggle">${btns}</div>
+      ${formHtml}
+    </div>`;
+  });
+
+  let adaptBanner = adapt ? `<div class="adapt-banner"><div class="adapt-icon">↻</div><div class="adapt-text"><strong>${adapt.title}</strong><br>${adapt.text}</div></div>` : '';
+  let readonlyBanner = isReadOnly ? `<div class="readonly-banner"><span style="color:var(--amber)">⏸</span> Programme archivé — lecture seule</div>` : '';
+
+  el.innerHTML = `
+    <div class="week-header-bar">
+      <div>
+        <div style="font-size:10px;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;">Semaine ${w.n} · ${p.label}</div>
+        <div class="week-title-display" style="color:${p.color}">${w.title}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="week-vol-display">${w.vol}<span style="font-size:.9rem;color:var(--text2)"> km</span></div>
+        ${w.highlight?`<div style="font-size:10px;color:var(--amber);letter-spacing:.06em;text-transform:uppercase;">Séance clé</div>`:''}
+      </div>
+    </div>
+    <div class="vol-bar-outer"><div class="vol-bar-inner" style="width:${pct}%;background:${p.color}"></div></div>
+    ${readonlyBanner}${adaptBanner}
+    <div class="sessions-list">${sessHtml}</div>
+    <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap;">
+      ${wi>0?`<button onclick="navigateWeek(${pi},${wi-1})" style="padding:5px 12px;font-size:11px;font-family:var(--font-mono);border:1px solid var(--border2);background:transparent;color:var(--text2);border-radius:6px;cursor:pointer;">← S${w.n-1}</button>`:''}
+      ${wi<p.weeks.length-1?`<button onclick="navigateWeek(${pi},${wi+1})" style="padding:5px 12px;font-size:11px;font-family:var(--font-mono);border:1px solid var(--border2);background:transparent;color:var(--text2);border-radius:6px;cursor:pointer;">S${w.n+1} →</button>`:''}
+      ${pi<phases.length-1&&wi===p.weeks.length-1?`<button onclick="navigateWeek(${pi+1},0)" style="padding:5px 12px;font-size:11px;font-family:var(--font-mono);border:1px solid var(--border2);background:transparent;color:var(--text2);border-radius:6px;cursor:pointer;">Phase suivante →</button>`:''}
+    </div>`;
+}
+
+function navigateWeek(pi, wi) {
+  activeWeek = {phase:pi,week:wi};
+  if(pi!==activePhaseIdx) {
+    activePhaseIdx = pi;
+    buildWeekNav(pi,'weekNav');
+    buildWeekNav(pi,'drawerWeekNav');
+    document.querySelectorAll('#phaseNav .phase-item').forEach((e,i)=>e.classList.toggle('active',i===pi));
+  }
+  document.querySelectorAll('#weekNav .week-item').forEach((e,i)=>e.classList.toggle('active',i===wi));
+  renderWeekDetail(pi,wi);
+}
+
+/* ══════════════════════════════════════════════
+   LOG FORM ACTIONS
+══════════════════════════════════════════════ */
+function setRessenti(fk, val) {
+  ressentiValues[fk] = parseInt(val);
+  document.querySelectorAll(`#ressenti_${fk} .ressenti-btn`).forEach((b,i) => {
+    b.className = 'ressenti-btn';
+    if(i+1===parseInt(val)) b.classList.add('selected-'+val);
+  });
+}
+function openForm(fk) { openForms[fk]=true; document.getElementById('form_'+fk)?.classList.add('open'); }
+function closeForm(fk) { openForms[fk]=false; document.getElementById('form_'+fk)?.classList.remove('open'); }
+
+async function saveLog(pi, wi, si, status) {
+  const fk = getLogKey(pi,wi,si);
+  const s = phases[pi].weeks[wi].sessions[si];
+  let data;
+  if(status==='done') {
+    const km = document.getElementById('km_'+fk)?.value;
+    const pace = document.getElementById('pace_'+fk)?.value;
+    const fc = document.getElementById('fc_'+fk)?.value;
+    const comment = document.getElementById('comment_'+fk)?.value;
+    const allure = s.detail.allure||'';
+    const m = allure.match(/(\d+)'(\d+)/);
+    data = { status:'done', kmActual:km?parseFloat(km):s.km, paceActual:pace?pace.trim():null,
+      paceTarget:m?`${m[1]}:${m[2]}`:null, fcActual:fc?parseInt(fc):null,
+      ressenti:ressentiValues[fk]||null, comment:comment?.trim()||null, ts:Date.now() };
+    openForms[fk] = false;
+  } else {
+    const comment = document.getElementById('comment_'+fk)?.value;
+    data = { status:'skipped', comment:comment?.trim()||null, ts:Date.now() };
+    openForms[fk] = false;
+  }
+  delete ressentiValues[fk];
+  showSyncStatus('saving');
+  await setLog(pi,wi,si,data);
+  showSyncStatus('ok');
+  refresh();
+  checkAdaptation();
+}
+
+function checkAdaptation() {
+  const sugg = getAdaptationSuggestion();
+  if(sugg) {
+    pendingAdaptation = sugg;
+    document.getElementById('adaptModalTitle').textContent = sugg.title;
+    document.getElementById('adaptModalText').innerHTML = sugg.text + '<br><br>Veux-tu appliquer cette adaptation ?';
+    document.getElementById('adaptModal').classList.remove('hidden');
+  }
+}
+function applyAdaptation() { closeAdaptModal(); refresh(); }
+function closeAdaptModal() { document.getElementById('adaptModal').classList.add('hidden'); pendingAdaptation=null; }
+
+/* ══════════════════════════════════════════════
+   ZONES
+══════════════════════════════════════════════ */
+function renderZones() {
+  const el = document.getElementById('zonesContent');
+  const goal = activeProgram?.goal || '—';
+  const race = activeProgram?.race_name || '—';
+  el.innerHTML = `
+    <div class="section-title">Objectif & données</div>
+    <div class="marathon-target" style="margin-bottom:1.5rem;">
+      <div class="target-item"><div class="tlabel">Objectif</div><div class="tval">${goal}</div></div>
+      <div class="tdivider"></div>
+      <div class="target-item"><div class="tlabel">Course</div><div class="tval" style="font-size:1rem;">${race}</div></div>
+      <div class="tdivider"></div>
+      <div class="target-item"><div class="tlabel">Allure cible</div><div class="tval">4'58"/km</div><div class="tsub">±5 sec</div></div>
+      <div class="tdivider"></div>
+      <div class="target-item"><div class="tlabel">FCmax</div><div class="tval">~190 bpm</div></div>
+    </div>
+    <div class="section-title">Zones d'entraînement</div>
+    <div class="zones-grid">${zones.map(z=>`
+      <div class="zone-card" style="--zone-color:${z.color}">
+        <div class="zone-label">${z.label}</div><div class="zone-name">${z.name}</div>
+        <div class="zone-pace">${z.pace}</div><div class="zone-hr">${z.hr}</div>
+        <div class="zone-desc">${z.desc}</div>
+        <div class="zone-badges">${z.usage.map(u=>`<span class="zbadge">${u}</span>`).join('')}</div>
+      </div>`).join('')}</div>
+    <div class="section-title">Garmin Fenix 5 — zones FC</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">
+      ${[['1','Récupération','< 114 bpm','#666'],['2','Endurance fond.','114–133 bpm','#1D9E75'],['3','Aérobie modéré','133–152 bpm','#378ADD'],['4','Seuil lactique','152–171 bpm','#EF9F27'],['5','VO2max / VMA','171–190 bpm','#E24B4A']].map(([z,n,hr,c])=>`
+      <div class="zone-card" style="--zone-color:${c}">
+        <div class="zone-label">Zone ${z}</div><div class="zone-name">${n}</div>
+        <div class="zone-pace" style="font-size:.95rem;color:${c}">${hr}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════
+   PHASES
+══════════════════════════════════════════════ */
+function renderPhaseDetail(pi) {
+  if(!phases[pi]) return;
+  const p = phases[pi];
+  const el = document.getElementById('phaseDetail');
+  const maxVol = 75;
+  el.innerHTML = `
+    <div class="section-title" style="color:${p.color}">${p.label} · Semaines ${p.weeks_range} · ${p.months}</div>
+    <div class="phase-desc-box">${p.desc}</div>
+    <div class="phase-stat-grid">
+      <div class="phase-stat"><div class="phase-stat-label">Volume</div><div class="phase-stat-val" style="color:${p.color}">${p.vol_min}–${p.vol_max} km</div></div>
+      <div class="phase-stat"><div class="phase-stat-label">Durée</div><div class="phase-stat-val" style="color:${p.color}">${p.weeks.length} semaines</div></div>
+    </div>
+    <div class="section-title">Points clés</div>
+    <div class="phase-desc-box">${p.focus.map(f=>`<div class="focus-item"><span style="color:${p.color}">›</span><span>${f}</span></div>`).join('')}</div>
+    <div class="section-title">Volume semaine par semaine</div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      ${p.weeks.map((w,wi)=>{
+        const done = w.sessions.filter((_,si)=>getLog(pi,wi,si)?.status==='done').length;
+        const pct2=Math.round(w.vol/maxVol*100);
+        const statusMark = done===w.sessions.length?`<span style="color:var(--teal)">✓</span>`:done>0?`<span style="color:var(--amber)">◑</span>`:'';
+        return `<div style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="goToSession(${pi},${wi})">
+          <span style="font-size:10px;color:var(--text3);min-width:26px;">S${w.n}</span>
+          <div style="flex:1;height:18px;background:var(--surface2);border-radius:3px;overflow:hidden;position:relative;">
+            <div style="height:100%;width:${pct2}%;background:${p.color};opacity:.6;border-radius:3px;"></div>
+            <span style="position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text2);">${w.title}</span>
+          </div>
+          <span style="font-size:11px;font-weight:500;color:${p.color};min-width:40px;text-align:right;">${w.vol}km</span>
+          <span style="width:14px;text-align:center;font-size:11px;">${statusMark}</span>
+          ${w.highlight?`<span style="width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0;"></span>`:'<span style="width:5px;"></span>'}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════
+   TIMELINE
+══════════════════════════════════════════════ */
+function renderTimeline() {
+  const wrap = document.getElementById('timelineWrap');
+  const W=820,H=300,padL=44,padR=16,padT=28,padB=36;
+  const allWeeks = phases.flatMap(p=>p.weeks);
+  if(!allWeeks.length) { wrap.innerHTML='<p style="color:var(--text3);font-size:12px;">Aucune semaine dans ce programme.</p>'; return; }
+  const xStep=(W-padL-padR)/(Math.max(allWeeks.length-1,1));
+  const yScale=h=>padT+(1-h/75)*(H-padT-padB);
+  const phaseColors=phases.map(p=>p.color);
+  let path=`M ${padL} ${yScale(allWeeks[0].vol)}`;
+  allWeeks.forEach((w,i)=>{ if(i>0) path+=` L ${padL+i*xStep} ${yScale(w.vol)}`; });
+  let phaseRects='',xi=0;
+  phases.forEach((p,pi)=>{
+    const x1=padL+xi*xStep-(xi===0?0:xStep/2);
+    const x2=padL+(xi+p.weeks.length-1)*xStep+xStep/2;
+    phaseRects+=`<rect x="${x1}" y="${padT}" width="${x2-x1}" height="${H-padT-padB}" fill="${phaseColors[pi]}" opacity=".06" rx="3"/>`;
+    phaseRects+=`<text x="${(x1+x2)/2}" y="${padT-8}" text-anchor="middle" font-size="9" fill="${phaseColors[pi]}" font-family="DM Mono,monospace">${p.label.toUpperCase()}</text>`;
+    xi+=p.weeks.length;
+  });
+  let dots='',labels='',wi2=0;
+  phases.forEach((p,pi)=>{
+    p.weeks.forEach((w,wi)=>{
+      const x=padL+wi2*xStep,y=yScale(w.vol);
+      const done=w.sessions.filter((_,si)=>getLog(pi,wi,si)?.status==='done').length;
+      const dc=done===w.sessions.length?'#1D9E75':done>0?'#EF9F27':phaseColors[pi];
+      dots+=`<circle cx="${x}" cy="${y}" r="${w.highlight?5:3}" fill="${dc}" opacity="${done>0?1:.6}" style="cursor:pointer" onclick="goToSession(${pi},${wi})"/>`;
+      if(w.highlight) dots+=`<circle cx="${x}" cy="${y}" r="8" fill="none" stroke="${phaseColors[pi]}" stroke-width="1" opacity=".4"/>`;
+      if(wi2%4===0||w.n===allWeeks[allWeeks.length-1].n) labels+=`<text x="${x}" y="${H-padB+14}" text-anchor="middle" font-size="8" fill="#504e48" font-family="DM Mono,monospace">S${w.n}</text>`;
+      wi2++;
+    });
+  });
+  let grid='';
+  [20,40,60,75].forEach(v=>{
+    const y=yScale(v);
+    grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252522" stroke-width="1"/>`;
+    grid+=`<text x="${padL-5}" y="${y+3}" text-anchor="end" font-size="8" fill="#504e48" font-family="DM Mono,monospace">${v}</text>`;
+  });
+  wrap.innerHTML = `
+    <div style="font-size:10px;color:var(--text3);margin-bottom:.4rem;letter-spacing:.06em;">Volume hebdomadaire · <span style="color:var(--teal)">●</span> complétée · <span style="color:var(--amber)">●</span> partielle · cliquer pour ouvrir</div>
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width:100%;display:block;">
+      ${grid}${phaseRects}
+      <path d="${path}" fill="none" stroke="#378ADD" stroke-width="1.5" opacity=".3"/>
+      ${dots}${labels}
+    </svg>`;
+}
+
+/* ══════════════════════════════════════════════
+   SETTINGS MODAL
+══════════════════════════════════════════════ */
+function openSettings() {
+  document.getElementById('settingsModal').classList.remove('hidden');
+  showSettingsTab('export', document.querySelector('.modal-tab'));
+  renderProgramList();
+}
+function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+function showSettingsTab(id, btn) {
+  document.querySelectorAll('.settings-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sp-'+id).classList.add('active');
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(id==='programs') renderProgramList();
+}
+
+/* EXPORT */
+function exportPlan() {
+  const json = JSON.stringify(activeProgram?.plan || {phases}, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `plan_${(activeProgram?.name||'marathon').replace(/\s+/g,'_').toLowerCase()}.json`;
+  a.click();
+}
+
+/* IMPORT */
+function validateAndImport() {
+  const raw = document.getElementById('importTextarea').value.trim();
+  const errEl = document.getElementById('importError');
+  const okEl = document.getElementById('importSuccess');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if(!raw) { errEl.textContent = 'Le champ est vide.'; errEl.style.display='block'; return; }
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch(e) { errEl.textContent = 'JSON invalide : ' + e.message; errEl.style.display='block'; return; }
+  // Validate structure
+  if(!parsed.phases || !Array.isArray(parsed.phases)) { errEl.textContent = 'Structure invalide : propriété "phases" manquante ou incorrecte.'; errEl.style.display='block'; return; }
+  for(const p of parsed.phases) {
+    if(!p.weeks || !Array.isArray(p.weeks)) { errEl.textContent = `Phase "${p.label||'?'}" : propriété "weeks" manquante.`; errEl.style.display='block'; return; }
+    for(const w of p.weeks) {
+      if(!w.sessions || !Array.isArray(w.sessions)) { errEl.textContent = `Semaine ${w.n||'?'} : propriété "sessions" manquante.`; errEl.style.display='block'; return; }
+    }
+  }
+  // Confirm
+  pendingConfirmFn = async () => {
+    showSyncStatus('saving');
+    await updateProgramPlan(activeProgram.id, parsed);
+    activeProgram.plan = parsed;
+    phases = parsed.phases;
+    buildUI();
+    showSyncStatus('ok');
+    closeSettings();
+  };
+  document.getElementById('confirmTitle').textContent = 'Importer le plan ?';
+  document.getElementById('confirmText').textContent = 'Ceci remplacera le plan actuel. Les logs de séances existants sont conservés.';
+  document.getElementById('settingsModal').classList.add('hidden');
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+/* PROGRAMS LIST */
+function renderProgramList() {
+  const el = document.getElementById('programList');
+  if(!allPrograms.length) { el.innerHTML = '<p style="font-size:12px;color:var(--text3);">Aucun programme.</p>'; return; }
+  el.innerHTML = allPrograms.map(p => {
+    const isActive = p.id === activeProgram?.id;
+    const weeks = p.plan?.phases?.reduce((a,ph)=>a+(ph.weeks?.length||0),0)||0;
+    return `<div class="program-row ${isActive?'is-active':''}">
+      <div class="program-row-info">
+        <div class="program-row-name">${p.name}</div>
+        <div class="program-row-meta">${p.race_name||'—'} · ${p.race_date||'—'} · ${weeks} semaines${p.goal?' · '+p.goal:''}</div>
+      </div>
+      <div class="program-row-actions">
+        <span class="program-row-badge ${isActive?'badge-active':'badge-archived'}">${isActive?'Actif':'Archivé'}</span>
+        ${isActive
+          ? `<button class="btn-danger" onclick="confirmArchive('${p.id}')">Archiver</button>`
+          : `<button class="btn-secondary" onclick="confirmReactivate('${p.id}')">Activer</button><button class="btn-secondary" onclick="viewArchivedProgram('${p.id}')">Consulter</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleNewProgramForm() {
+  const f = document.getElementById('newProgramForm');
+  f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+
+async function createNewProgram() {
+  const name = document.getElementById('npName').value.trim();
+  const race = document.getElementById('npRace').value.trim();
+  const date = document.getElementById('npDate').value;
+  const goal = document.getElementById('npGoal').value.trim();
+  const planRaw = document.getElementById('npPlan').value.trim();
+  if(!name) { alert('Le nom du programme est requis.'); return; }
+  let plan = {phases:[]};
+  if(planRaw) {
+    try { plan = JSON.parse(planRaw); } catch(e) { alert('JSON du plan invalide : ' + e.message); return; }
+  }
+  // Archive current active
+  if(activeProgram) await archiveProgram(activeProgram.id);
+  showSyncStatus('saving');
+  const newProg = await createProgram(name, race, date, goal, plan);
+  allPrograms.push(newProg);
+  await activateProgram(newProg);
+  showSyncStatus('ok');
+  toggleNewProgramForm();
+  renderProgramList();
+}
+
+function confirmArchive(id) {
+  pendingConfirmFn = async () => {
+    showSyncStatus('saving');
+    await archiveProgram(id);
+    allPrograms = allPrograms.map(p => p.id===id ? {...p,status:'archived'} : p);
+    if(activeProgram?.id===id) {
+      // Switch to another active or first
+      const other = allPrograms.find(p=>p.id!==id&&p.status==='active') || allPrograms.find(p=>p.id!==id);
+      if(other) await activateProgram(other);
+    }
+    showSyncStatus('ok');
+    renderProgramList();
+  };
+  document.getElementById('confirmTitle').textContent = 'Archiver ce programme ?';
+  document.getElementById('confirmText').textContent = 'Le programme sera conservé en lecture seule. Tes logs de séances sont préservés.';
+  document.getElementById('settingsModal').classList.add('hidden');
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function confirmReactivate(id) {
+  pendingConfirmFn = async () => {
+    showSyncStatus('saving');
+    await reactivateProgram(id);
+    allPrograms = allPrograms.map(p => ({...p, status: p.id===id?'active':'archived'}));
+    const prog = allPrograms.find(p=>p.id===id);
+    await activateProgram(prog);
+    showSyncStatus('ok');
+    renderProgramList();
+  };
+  document.getElementById('confirmTitle').textContent = 'Réactiver ce programme ?';
+  document.getElementById('confirmText').textContent = "Le programme actuel sera archivé. Tu pourras le consulter à tout moment.";
+  document.getElementById('settingsModal').classList.add('hidden');
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+async function viewArchivedProgram(id) {
+  const prog = allPrograms.find(p=>p.id===id);
+  if(!prog) return;
+  showSyncStatus('loading');
+  closeSettings();
+  // Temporarily load without changing activeProgram record in DB
+  const savedActive = activeProgram;
+  activeProgram = {...prog, status:'archived'};
+  isReadOnly = true;
+  phases = prog.plan.phases || [];
+  _logsCache = await loadLogsForProgram(prog.id);
+  buildUI();
+  updateProgramBadge();
+  // Show a banner to return
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#EF9F27;color:#412402;padding:8px 16px;text-align:center;font-size:12px;font-family:DM Mono,monospace;z-index:300;display:flex;align-items:center;justify-content:center;gap:12px;';
+  banner.innerHTML = `<span>Consultation de "${prog.name}" (archivé)</span><button onclick="returnToActive()" style="padding:3px 10px;background:#412402;color:#F5BC65;border:none;border-radius:4px;font-family:DM Mono,monospace;font-size:11px;cursor:pointer;">Retour au programme actif</button>`;
+  banner.id = 'archiveBanner';
+  document.body.prepend(banner);
+  showSyncStatus('ok');
+  window._savedActiveProgram = savedActive;
+}
+
+async function returnToActive() {
+  document.getElementById('archiveBanner')?.remove();
+  const saved = window._savedActiveProgram;
+  if(saved) {
+    showSyncStatus('loading');
+    await activateProgram(saved);
+    showSyncStatus('ok');
+  }
+}
+
+/* CONFIRM MODAL */
+async function confirmAction() {
+  document.getElementById('confirmModal').classList.add('hidden');
+  if(pendingConfirmFn) { await pendingConfirmFn(); pendingConfirmFn=null; }
+}
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.add('hidden');
+  document.getElementById('settingsModal').classList.remove('hidden');
+  pendingConfirmFn=null;
+}
+
+/* ══════════════════════════════════════════════
+   SYNC STATUS
+══════════════════════════════════════════════ */
+function showSyncStatus(state) {
+  let bar = document.getElementById('syncBar');
+  if(!bar) { bar=document.createElement('div'); bar.id='syncBar'; document.body.appendChild(bar); }
+  const styles = {
+    loading: ['var(--surface2)','1px solid var(--border2)','var(--text3)','⟳ Synchronisation...'],
+    saving:  ['var(--surface2)','1px solid var(--border2)','var(--text2)','↑ Sauvegarde...'],
+    ok:      ['rgba(29,158,117,0.15)','1px solid rgba(29,158,117,0.3)','var(--teal)','✓ Synchronisé'],
+    error:   ['var(--red-dim)','1px solid rgba(226,75,74,0.3)','var(--red)','⚠ Hors-ligne'],
+  };
+  const [bg,border,color,text] = styles[state]||styles.ok;
+  Object.assign(bar.style, {background:bg,border,color,opacity:'1'});
+  bar.textContent = text;
+  if(state==='ok') setTimeout(()=>{ bar.style.opacity='0'; },2000);
+}
+
+/* ══════════════════════════════════════════════
+   REFRESH
+══════════════════════════════════════════════ */
+function refresh() {
+  updateFormBar();
+  buildWeekNav(activeWeek.phase,'weekNav');
+  buildWeekNav(activeWeek.phase,'drawerWeekNav');
+  if(activeTab==='overview') renderOverview();
+  if(activeTab==='week') renderWeekDetail(activeWeek.phase,activeWeek.week);
+  if(activeTab==='phases') renderPhaseDetail(activePhaseIdx);
+  if(activeTab==='timeline') renderTimeline();
+}
+
+/* ══════════════════════════════════════════════
+   START
+══════════════════════════════════════════════ */
+
+/* Mobile-safe event binding — addEventListener instead of onclick */
+function bindTouch(id, fn) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  let moved = false;
+  el.addEventListener('touchstart', () => { moved = false; }, {passive:true});
+  el.addEventListener('touchmove', () => { moved = true; }, {passive:true});
+  el.addEventListener('touchend', (e) => {
+    if(!moved) { e.preventDefault(); fn(); }
+  });
+  el.addEventListener('click', fn);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  bindTouch('hamburgerBtn', toggleDrawer);
+  bindTouch('settingsBtn', openSettings);
+  bindTouch('drawerOverlay', closeDrawer);
+});
+
+init();
+</script>
+</body>
+</html>
